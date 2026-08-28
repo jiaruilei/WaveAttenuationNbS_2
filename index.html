@@ -3,66 +3,119 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Linear Wave Theory • Interactive Wave Field (Dispersion)</title>
+<title>Wave Attenuation by Nature-Based Solutions</title>
+<meta name="description" content="Explore how seagrass, mangroves, and coral reefs attenuate waves." />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Wave Attenuation by Nature-Based Solutions" />
+<meta property="og:description" content="Explore how seagrass, mangroves, and coral reefs attenuate waves." />
+<meta property="og:image" content="https://raw.githubusercontent.com/jiaruilei/WaveAttenuationNbS_2/main/og.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Wave Attenuation by Nature-Based Solutions" />
+<meta name="twitter:description" content="Explore how seagrass, mangroves, and coral reefs attenuate waves." />
+<meta name="twitter:image" content="https://raw.githubusercontent.com/jiaruilei/WaveAttenuationNbS_2/main/og.png" />
 <style>
-  :root{
-    --bg:#0c1623; --panel:#101c2b; --ink:#e8f0ff; --muted:#a9bbd9;
-    --accent:#40c4ff; --accent2:#b388ff; --good:#2bd67b; --warn:#ffcf5c; --bad:#ff6363;
-    --grid:#1a2a40; --border:#0f2236;
+  :root {
+    --navy:#0b1930;
+    --panel:#ffffff;
+    --surface:#f4f7fb;
+    --line:#dce4ee;
+    --ink:#142033;
+    --muted:#5d6b7d;
+    --accent:#2563eb;
+    --accent-dark:#1d4ed8;
+    --accent2:#7c3aed;
+    --cyan:#38bdf8;
+    --good:#047857;
+    --warn:#b45309;
+    --bad:#b91c1c;
+    --shadow:0 16px 42px rgba(15,23,42,.10);
   }
-  *{box-sizing:border-box}
-  html,body{
-  margin:0;height:100%;
-  background:var(--bg);color:var(--ink);
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial;
-  font-size: 18px;   
-}
-  .app{display:grid;grid-template-columns:360px 1fr;grid-template-rows:auto 1fr;
-    grid-template-areas:"toolbar toolbar" "panel canvas";height:100vh}
-  header{grid-area:toolbar;display:flex;align-items:center;gap:14px;padding:12px 16px;
-    border-bottom:1px solid var(--border);background:linear-gradient(180deg,#0f2032,#0d1b2b)}
-  header h1{font-size:20px;margin:0;font-weight:650;letter-spacing:.2px}
-  header .badge{font-size:12px;color:var(--muted)}
-  #status{margin-left:auto;font-size:14px;color:var(--muted)}
-  aside.panel{grid-area:panel;background:var(--panel);border-right:1px solid var(--border);
-    padding:14px 14px 18px;overflow:auto}
-  .group{margin-bottom:16px;padding-bottom:12px;border-bottom:1px dashed #223654}
-  .group:last-child{border-bottom:none}
-  .group h3{margin:0 0 8px 0;font-size:13px;color:#cfe2ff;text-transform:uppercase;letter-spacing:.8px}
-  label{display:flex;align-items:center;gap:8px;margin:6px 0 8px 0;font-size:16px;color:var(--ink)}
-  input[type="range"], input[type="number"], select, button{
-    width:100%;background:#0b1a29;color:var(--ink);border:1px solid #1e3350;border-radius:10px;
-    padding:8px 10px;font-size:14px;outline:none
+  * { box-sizing:border-box; }
+  html,body {
+    margin:0;
+    min-height:100%;
+    color:var(--ink);
+    background:#fff;
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:14px;
   }
-  input[type="range"]{padding:0;height:32px}
-  input[type="number"]{padding:7px 10px}
-  button{cursor:pointer;transition:.15s ease background,.15s ease transform}
-  button:hover{background:#0f2338}
-  button:active{transform:translateY(1px)}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-  .muted{color:var(--muted);font-size:12.5px;line-height:1.35}
-  .kbd{display:inline-block;border:1px solid #27476f;background:#0d1d30;border-radius:6px;padding:2px 6px;font-size:12px}
-  .metric{background:#0d1d30;border:1px solid #1d3556;border-radius:10px;padding:10px 10px;font-size:13px;color:#d8e6ff}
-  .metric b{color:#ffffff}
-  .chipbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
-  .chip{display:inline-flex;align-items:center;gap:8px;background:#0d1d30;border:1px solid #1d3556;border-radius:999px;padding:6px 10px;font-size:12.5px}
-  .dot{width:12px;height:12px;border-radius:50%}
-  .dot.a{background:var(--accent)} .dot.b{background:var(--accent2)} .dot.c{background:var(--warn)} .dot.d{background:var(--good)}
-  .canvas-wrap{grid-area:canvas;position:relative}
-  canvas#view{display:block;width:100%;height:100%;background:conic-gradient(from 180deg at 50% 50%,#0c1726,#0b1a2b 40%,#0b1a2b 60%,#0c1726)}
-  .overlay{
-    position:absolute;left:14px;top:14px;pointer-events:none;
-    font-size:15px;color:#d8e6ff;background:rgba(13,29,48,0.72);border:1px solid rgba(29,53,86,0.85);
-    padding:10px 10px;border-radius:12px;backdrop-filter:blur(2px);
-    max-width:min(520px,calc(100% - 28px));
+  button,input,select { font:inherit; }
+  button:focus-visible,input:focus-visible,select:focus-visible { outline:3px solid rgba(37,99,235,.22); outline-offset:2px; }
+  .app {
+    display:grid;
+    grid-template-columns:320px minmax(0,1fr);
+    grid-template-rows:auto minmax(0,1fr);
+    grid-template-areas:"toolbar toolbar" "panel canvas";
+    height:100vh;
+    overflow:hidden;
+    background:#fff;
   }
-  .overlay .line{display:flex;gap:10px;flex-wrap:wrap}
-  .overlay .line span{white-space:nowrap}
-  .overlay b{color:#fff}
-  .help{
-    margin-top:8px;font-size:12px;color:#bed3ff
+  header {
+    grid-area:toolbar;
+    display:flex;
+    align-items:center;
+    gap:18px;
+    min-height:74px;
+    padding:14px 20px;
+    border-bottom:1px solid var(--line);
+    background:#fff;
   }
+  .eyebrow { margin:0 0 3px; color:var(--accent); font-size:12px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; }
+  header h1 { margin:0; color:var(--ink); font-size:22px; font-weight:760; letter-spacing:-.02em; }
+  header .badge { color:var(--muted); font-size:13px; }
+  #status { margin-left:auto; padding:7px 10px; border:1px solid #d7e2ef; border-radius:999px; color:#34445a; background:#f8fafc; font-size:12px; font-weight:700; }
+  aside.panel { grid-area:panel; overflow:auto; padding:18px; border-right:1px solid var(--line); background:#fbfdff; }
+  .group { margin-bottom:18px; padding-bottom:18px; border-bottom:1px solid var(--line); }
+  .group:last-child { margin-bottom:0; padding-bottom:0; border-bottom:0; }
+  .group h3 { margin:0 0 10px; color:#34445a; font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; }
+  label { display:flex; align-items:center; gap:8px; margin:9px 0 6px; color:#27364b; font-size:13px; font-weight:700; }
+  input[type="range"],input[type="number"],select,button {
+    width:100%;
+    min-height:38px;
+    padding:8px 10px;
+    border:1px solid #cbd6e4;
+    border-radius:9px;
+    color:var(--ink);
+    background:#fff;
+  }
+  input[type="range"] { min-height:28px; padding:0; accent-color:var(--accent); }
+  input[type="checkbox"] { accent-color:var(--accent); }
+  button { color:#233651; font-weight:750; cursor:pointer; transition:.15s ease background,.15s ease border-color,.15s ease transform; }
+  button:hover { border-color:#9eb2ca; background:#f0f5fb; }
+  button:active { transform:translateY(1px); }
+  #addVeg,#updateVeg { color:#fff; border-color:var(--accent); background:var(--accent); }
+  #addVeg:hover,#updateVeg:hover { border-color:var(--accent-dark); background:var(--accent-dark); }
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .row-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .muted { color:var(--muted); font-size:11.5px; line-height:1.4; }
+  .kbd { display:inline-block; min-width:22px; padding:1px 5px; border:1px solid #cbd6e4; border-radius:5px; color:#42526a; background:#fff; font-size:11px; text-align:center; }
+  .metric { padding:11px 12px; border:1px solid var(--line); border-radius:11px; color:#24364f; background:#fff; font-size:12px; line-height:1.55; }
+  .metric b { color:#172b4d; }
+  .chipbar { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .chip { display:inline-flex; align-items:center; gap:6px; padding:5px 8px; border:1px solid #d7e2ef; border-radius:999px; color:#42526a; background:#fff; font-size:11px; }
+  .dot { width:9px; height:9px; border-radius:50%; }
+  .dot.a { background:var(--accent); } .dot.b { background:var(--accent2); } .dot.c { background:#eab308; } .dot.d { background:#10b981; }
+  .canvas-wrap { grid-area:canvas; position:relative; min-width:0; min-height:0; margin:18px; overflow:hidden; border:1px solid var(--line); border-radius:14px; background:#eef5ff; box-shadow:var(--shadow); }
+  canvas#view { display:block; width:100%; height:100%; background:#eef5ff; }
+  .overlay {
+    position:absolute;
+    top:14px;
+    left:14px;
+    max-width:min(540px,calc(100% - 72px));
+    padding:10px 12px;
+    border:1px solid rgba(203,214,228,.96);
+    border-radius:11px;
+    color:#334155;
+    background:rgba(255,255,255,.88);
+    box-shadow:0 8px 24px rgba(15,23,42,.08);
+    backdrop-filter:blur(4px);
+    font-size:12px;
+    pointer-events:none;
+  }
+  .overlay .line { display:flex; flex-wrap:wrap; gap:5px 12px; }
+  .overlay .line span { white-space:nowrap; }
+  .overlay b { color:#172b4d; }
+  .help { margin-top:8px; color:var(--muted); font-size:11.5px; line-height:1.5; }
 
   /* X-view controls (zoom + pan) */
   .xzoom{
@@ -98,9 +151,9 @@
   .xctl-label{
     position:absolute;
     font-size:11px;
-    color:rgba(169,187,217,0.9);
-    background:rgba(16,28,43,0.65);
-    border:1px solid rgba(15,34,54,0.9);
+    color:#5d6b7d;
+    background:rgba(255,255,255,.82);
+    border:1px solid rgba(203,214,228,.96);
     border-radius:10px;
     padding:2px 8px;
     pointer-events:none;
@@ -109,14 +162,31 @@
   .xctl-label.zoom{ right:36px; top:14px; }
   .xctl-label.pan{ left:14px; bottom:12px; }
 
+  @media (max-width:900px) {
+    .app { grid-template-columns:1fr; grid-template-rows:auto auto minmax(520px,68vh); grid-template-areas:"toolbar" "panel" "canvas"; height:auto; overflow:visible; }
+    header { align-items:flex-start; flex-wrap:wrap; }
+    header .badge { flex-basis:100%; order:3; }
+    #status { margin-left:auto; }
+    aside.panel { overflow:visible; border-right:0; border-bottom:1px solid var(--line); }
+    .canvas-wrap { min-height:520px; }
+  }
+  @media (max-width:560px) {
+    header h1 { font-size:19px; }
+    .row,.row-3 { grid-template-columns:1fr; }
+    .canvas-wrap { margin:10px; }
+  }
+
 </style>
 </head>
 <body>
 <div class="app">
 
   <header>
-    <h1>Linear Wave Theory</h1>
-    <span class="badge">wave field + dispersion (ω² = g k tanh(kh))</span>
+    <div>
+      <p class="eyebrow">CE2134 · Fluid Mechanics</p>
+      <h1>Wave Attenuation by Nature-Based Solutions</h1>
+    </div>
+    <span class="badge">Wave field · dispersion · vegetation</span>
     <div id="status">Running</div>
   </header>
 
@@ -128,12 +198,12 @@
         <div>
           <label for="T">Period T (s)</label>
           <input type="range" id="T" min="1" max="25" step="0.1" value="8.0" />
-          <div class="muted">Shortcut: <span class="kbd">[</span> / <span class="kbd">]</span></div>
+          <div class="muted"><span class="kbd">[</span> / <span class="kbd">]</span></div>
         </div>
         <div>
           <label for="h">Depth h (m)</label>
           <input type="range" id="h" min="0.5" max="200" step="0.5" value="20" />
-          <div class="muted">Shortcut: <span class="kbd">-</span> / <span class="kbd">=</span></div>
+          <div class="muted"><span class="kbd">−</span> / <span class="kbd">+</span></div>
         </div>
       </div>
 
@@ -150,33 +220,33 @@
 
       <div class="row">
         <div>
-          <label for="viewN">View width (in wavelengths)</label>
+          <label for="viewN">View width (λ)</label>
           <input type="range" id="viewN" min="1" max="6" step="0.25" value="3.0" />
-          <div class="muted">Keeps ~constant number of crests on-screen.</div>
+          <div class="muted">Crests on screen</div>
         </div>
         <div>
           <label for="speed">Animation speed</label>
           <input type="range" id="speed" min="0.1" max="3.0" step="0.1" value="1.0" />
-          <div class="muted">Shortcut: <span class="kbd">Space</span> pause</div>
+          <div class="muted"><span class="kbd">Space</span> pause</div>
         </div>
       </div>
 
     </div>
 
     <div class="group">
-      <h3>Computed from Dispersion</h3>
+      <h3>Live results</h3>
       <div class="metric" id="metrics">—</div>
       <div class="chipbar" aria-label="Legend">
-        <span class="chip"><span class="dot a"></span>u, w velocity arrows</span>
-        <span class="chip"><span class="dot b"></span>color field (selected)</span>
-        <span class="chip"><span class="dot c"></span>free surface η(x,t)</span>
-        <span class="chip"><span class="dot d"></span>tracer particles</span>
+        <span class="chip"><span class="dot a"></span>Velocity</span>
+        <span class="chip"><span class="dot b"></span>Field</span>
+        <span class="chip"><span class="dot c"></span>Surface η</span>
+        <span class="chip"><span class="dot d"></span>Tracers</span>
       </div>
     </div>
 
     <div class="group">
-      <h3>Visualization Options</h3>
-      <label for="field">Color field (in water column)
+      <h3>Display</h3>
+      <label for="field">Water-column field
         <select id="field">
           <option value="none">None</option>
           <option value="phi">Velocity potential ϕ</option>
@@ -189,11 +259,11 @@
       <div class="row">
         <label style="margin:0">
           <input type="checkbox" id="arrows" checked style="width:auto" />
-          <span>Show velocity arrows</span>
+          <span>Velocity arrows</span>
         </label>
         <label style="margin:0">
           <input type="checkbox" id="tracers" checked style="width:auto" />
-          <span>Show tracers</span>
+          <span>Tracers</span>
         </label>
       </div>
 
@@ -203,24 +273,22 @@
       </div>
 
       <div class="help">
-        Click in the water to add a tracer at that mean position (X<sub>0</sub>, Z<sub>0</sub>).<br>
-        <b>Shift</b>+click adds a vegetation patch (uses the Vegetation settings). <b>Alt</b>+click deletes the nearest patch.<br>
-        Shortcuts: <span class="kbd">Space</span> pause · <span class="kbd">R</span> reset tracers · <span class="kbd">0</span> reset time
+        Click: tracer · <b>Shift</b>+click: vegetation · <b>Alt</b>+click: remove patch.<br>
+        <span class="kbd">Space</span> pause · <span class="kbd">R</span> tracers · <span class="kbd">0</span> time
       </div>
     </div>
 
     
     <div class="group">
-      <h3>Vegetation Attenuation (Dalrymple 1984)</h3>
+      <h3>Vegetation attenuation</h3>
 
       <label style="margin:0">
         <input type="checkbox" id="attenOn" style="width:auto" />
-        <span>Enable vegetation attenuation</span>
+        <span>Enable attenuation</span>
       </label>
 
       <div class="muted" style="margin-top:6px">
-        Vegetation is represented as <b>1D patches</b> along x with uniform properties. Inside a patch, the wave amplitude decays according to the
-        drag-dissipation model in the lecture notes (Dalrymple et&nbsp;al., 1984).
+        1D patches use the Dalrymple et&nbsp;al. (1984) drag-dissipation model.
       </div>
 
       <label for="vegPreset" style="margin-top:10px">Preset</label>
@@ -235,7 +303,7 @@
         <div>
           <label for="vegX0">Start x (m)</label>
           <input type="number" id="vegX0" min="0" step="0.1" value="20" />
-          <div class="muted">Tip: <b>Shift</b>+click the canvas to set this.</div>
+          <div class="muted"><b>Shift</b>+click to set</div>
         </div>
         <div>
           <label for="vegL">Patch length L (m)</label>
@@ -247,7 +315,7 @@
         <div>
           <label for="vegS">Vegetation height s (m)</label>
           <input type="number" id="vegS" min="0" step="0.05" value="1.0" />
-          <div class="muted">Measured upward from seabed (0 ≤ s ≤ h).</div>
+          <div class="muted">0 ≤ s ≤ h</div>
         </div>
         <div>
           <label for="vegN">Density n (#/m²)</label>
@@ -259,7 +327,7 @@
         <div>
           <label for="vegD">Diameter D (m)</label>
           <input type="number" id="vegD" min="0" step="0.001" value="0.010" />
-          <div class="muted">For cylinders: frontal area per unit height A = D.</div>
+          <div class="muted">Cylinder: A = D</div>
         </div>
         <div>
           <label for="vegCD">Drag coefficient C<sub>D</sub></label>
@@ -277,14 +345,11 @@
         <button id="clearVeg">Clear all</button>
       </div>
 
-      <label for="vegList" style="margin-top:10px">Patches (select to edit)</label>
+      <label for="vegList" style="margin-top:10px">Patches</label>
       <select id="vegList" size="5"></select>
 
       <div class="metric" id="vegMetrics" style="margin-top:10px">—</div>
 
-      <div class="help">
-        <b>Shift</b>+click: add patch at x · <b>Alt</b>+click: delete nearest patch.<br>
-      </div>
     </div>
 
   </aside>
@@ -533,7 +598,7 @@ function hexToRgb(hex){
   const r = (n>>16)&255, g=(n>>8)&255, b=n&255;
   return {r,g,b};
 }
-const rgbBg = hexToRgb("#0b1a29");
+const rgbBg = hexToRgb("#eef5ff");
 const rgbA  = hexToRgb(getComputedStyle(document.documentElement).getPropertyValue("--accent").trim());
 const rgbB  = hexToRgb(getComputedStyle(document.documentElement).getPropertyValue("--accent2").trim());
 
@@ -857,7 +922,7 @@ function drawArrow(px, py, vx, vy){
 function drawAxesAndGrid(){
   // subtle grid in screen coords
   ctx.save();
-  ctx.strokeStyle = "rgba(80,120,180,0.12)";
+  ctx.strokeStyle = "rgba(37,99,235,0.10)";
   ctx.lineWidth = 1;
 
   const gx = Math.round(view.W/12);
@@ -868,8 +933,8 @@ function drawAxesAndGrid(){
 
   // x-axis ticks at bottom of plot area (z=z0)
   ctx.save();
-  ctx.strokeStyle = "rgba(200,220,255,0.35)";
-  ctx.fillStyle   = "rgba(200,220,255,0.70)";
+  ctx.strokeStyle = "rgba(71,85,105,0.45)";
+  ctx.fillStyle   = "rgba(51,65,85,0.78)";
   ctx.lineWidth = 1;
 
   const y0 = toScreen(world.x0, world.z0).y;
@@ -888,10 +953,10 @@ function drawBathymetry(){
   const pR = toScreen(world.x1, -state.h);
 
   ctx.save();
-  ctx.strokeStyle = "rgba(255,255,255,0.7)";
+  ctx.strokeStyle = "rgba(51,65,85,0.72)";
   ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(pL.x, pL.y); ctx.lineTo(pR.x, pR.y); ctx.stroke();
-  ctx.fillStyle = "rgba(255,255,255,0.65)";
+  ctx.fillStyle = "rgba(51,65,85,0.78)";
   ctx.fillText(`      seabed z = −h = −${fmt(state.h,1)} m`, pL.x+8, pL.y-10);
   ctx.restore();
 }
@@ -1146,7 +1211,7 @@ function drawVegetation(){
     }
 
     // top boundary
-    ctx.strokeStyle = "rgba(255,255,255,0.18)";
+    ctx.strokeStyle = "rgba(71,85,105,0.30)";
     ctx.setLineDash([4,4]);
     const pL = toScreen(x0c, zT);
     const pR = toScreen(x1c, zT);
@@ -1154,7 +1219,7 @@ function drawVegetation(){
     ctx.setLineDash([]);
 
     // label
-    ctx.fillStyle = "rgba(232,240,255,0.85)";
+    ctx.fillStyle = "rgba(36,54,79,0.88)";
     const label = (p.type==="seagrass") ? "seagrass" : (p.type==="mangroves") ? "mangroves" : (p.type==="coral") ? "coral" : "vegetation";
     ctx.fillText(`${label}`, left+6, top-6);
   }
@@ -1167,7 +1232,7 @@ function drawAmplitudeEnvelope(){
 
   const N = Math.max(260, Math.floor(view.W/3));
   ctx.save();
-  ctx.strokeStyle = "rgba(255,255,255,0.20)";
+  ctx.strokeStyle = "rgba(71,85,105,0.28)";
   ctx.lineWidth = 1.3;
   ctx.setLineDash([6,6]);
 
@@ -1200,12 +1265,12 @@ function drawMeanSurface(){
   const pR = toScreen(world.x1, 0);
 
   ctx.save();
-  ctx.strokeStyle = "rgba(255,255,255,0.25)";
+  ctx.strokeStyle = "rgba(71,85,105,0.34)";
   ctx.lineWidth = 1.5;
   ctx.setLineDash([6,6]);
   ctx.beginPath(); ctx.moveTo(pL.x, pL.y); ctx.lineTo(pR.x, pR.y); ctx.stroke();
   ctx.setLineDash([]);
-  ctx.fillStyle = "rgba(255,255,255,0.5)";
+  ctx.fillStyle = "rgba(51,65,85,0.72)";
   ctx.fillText("mean surface z = 0", pL.x+8, pL.y-8);
   ctx.restore();
 }
@@ -1213,7 +1278,7 @@ function drawMeanSurface(){
 function drawFreeSurface(t){
   const N = Math.max(300, Math.floor(view.W/2));
   ctx.save();
-  ctx.strokeStyle = "rgba(255,207,92,0.95)";
+  ctx.strokeStyle = "rgba(234,179,8,0.95)";
   ctx.lineWidth = 2.5;
   ctx.beginPath();
   for (let i=0;i<=N;i++){
@@ -1226,7 +1291,7 @@ function drawFreeSurface(t){
 
   // light fill for water (under the instantaneous surface, but approximated)
   ctx.globalAlpha = 0.06;
-  ctx.fillStyle = "rgba(64,196,255,1)";
+  ctx.fillStyle = "rgba(74,163,232,1)";
   ctx.lineTo(toScreen(world.x1, world.z0).x, toScreen(world.x1, world.z0).y);
   ctx.lineTo(toScreen(world.x0, world.z0).x, toScreen(world.x0, world.z0).y);
   ctx.closePath();
@@ -1249,7 +1314,7 @@ function drawColorField(t){
 
   ctx.save();
   // slightly transparent so grid & lines are visible
-  const alphaBase = 0.90;
+  const alphaBase = 0.58;
 
   for (let iz=0; iz<nz; iz++){
     const z0 = zBot + (iz/nz)*(zTop - zBot);
@@ -1286,7 +1351,7 @@ function drawColorField(t){
 
   // label
   ctx.globalAlpha = 0.9;
-  ctx.fillStyle = "rgba(232,240,255,0.85)";
+  ctx.fillStyle = "rgba(36,54,79,0.88)";
   const name = ({
     phi:"ϕ (velocity potential)",
     u:"u (horizontal velocity)",
@@ -1312,8 +1377,8 @@ function drawVelocityArrows(t){
   const vref = Math.max(umax, wmax);
 
   ctx.save();
-  ctx.strokeStyle = "rgba(64,196,255,0.85)";
-  ctx.fillStyle = "rgba(64,196,255,0.85)";
+  ctx.strokeStyle = "rgba(37,99,235,0.82)";
+  ctx.fillStyle = "rgba(37,99,235,0.82)";
   ctx.lineWidth = 1.2;
 
   for (let iz=0; iz<=nz; iz++){
@@ -1408,8 +1473,8 @@ function drawTracers(){
   if (!state.showTracers) return;
 
   ctx.save();
-  ctx.strokeStyle = "rgba(43,214,123,0.8)";
-  ctx.fillStyle = "rgba(43,214,123,0.95)";
+  ctx.strokeStyle = "rgba(4,120,87,0.72)";
+  ctx.fillStyle = "rgba(4,120,87,0.90)";
   ctx.lineWidth = 1.6;
 
   for (const tr of state.tracers){
@@ -1487,7 +1552,7 @@ function updateOverlay(){
 function updateMetricsCard(){
   const m = document.getElementById("metrics");
   if (!Number.isFinite(state.k)){
-    m.textContent = "Could not solve dispersion (check parameters).";
+    m.textContent = "Dispersion solution unavailable.";
     return;
   }
 
@@ -1496,15 +1561,13 @@ function updateMetricsCard(){
   const cDeep = Math.sqrt(state.g / state.k);
 
   const msg = `
-    <div><b>Dispersion</b>: ω² = g k tanh(kh)</div>
+    <div><b>Dispersion</b> · ω² = gk tanh(kh)</div>
     <div style="margin-top:6px">
-      <b>Solution</b>: k = ${fmt(state.k,6)} 1/m → λ = ${fmt(state.lambda,3)} m, c = ${fmt(state.c,3)} m/s
+      k = ${fmt(state.k,6)} 1/m · λ = ${fmt(state.lambda,3)} m · c = ${fmt(state.c,3)} m/s
     </div>
     <div style="margin-top:6px">
-      <b>Dimensionless</b>: kh = ${fmt(state.kh,3)} → ${state.regime}
-    </div>
-    <div style="margin-top:6px">
-      <b>Limits</b>: shallow c ≈ √(gh) = ${fmt(cShallow,3)} m/s · deep c ≈ √(g/k) = ${fmt(cDeep,3)} m/s
+      kh = ${fmt(state.kh,3)} · ${state.regime}<br>
+      c<sub>shallow</sub> ≈ ${fmt(cShallow,3)} m/s · c<sub>deep</sub> ≈ ${fmt(cDeep,3)} m/s
     </div>
   `;
   m.innerHTML = msg;
@@ -1731,11 +1794,11 @@ function updateVegMetricsCard(){
   if (!vegMetricsEl) return;
 
   if (!state.attenOn){
-    vegMetricsEl.innerHTML = `<div><b>Attenuation</b>: off</div><div class="muted" style="margin-top:6px">Enable attenuation and add at least one patch.</div>`;
+    vegMetricsEl.innerHTML = `<div><b>Attenuation</b>: off</div><div class="muted" style="margin-top:6px">Turn it on and add a patch.</div>`;
     return;
   }
   if (state.vegPatches.length === 0){
-    vegMetricsEl.innerHTML = `<div><b>Attenuation</b>: on</div><div class="muted" style="margin-top:6px">No patches yet. Click “Add patch” or use <span class="kbd">Shift</span>+click.</div>`;
+    vegMetricsEl.innerHTML = `<div><b>Attenuation</b>: on</div><div class="muted" style="margin-top:6px">Add a patch or <span class="kbd">Shift</span>+click.</div>`;
     return;
   }
 
@@ -1758,12 +1821,12 @@ function updateVegMetricsCard(){
   const pct = (state.a > 0) ? (100 * aViewEnd / state.a) : 0;
 
   const msg = `
-    <div><b>Dalrymple-type attenuation</b> (rigid cylinders drag dissipation)</div>
+    <div><b>Dalrymple model</b></div>
     <div style="margin-top:6px">
-      <b>View</b>: a(0)=${fmt(state.a,3)} m → a(x₁)=${fmt(aViewEnd,3)} m (${fmt(pct,1)}%)
+      a(0)=${fmt(state.a,3)} m → a(x₁)=${fmt(aViewEnd,3)} m (${fmt(pct,1)}%)
     </div>
     <div style="margin-top:6px">
-      <b>Selected patch</b>: ${vegLabel(p.type)} [${fmt(x0,1)}–${fmt(x1,1)} m], L=${fmt(L,1)} m
+      <b>${vegLabel(p.type)}</b> · ${fmt(x0,1)}–${fmt(x1,1)} m · L=${fmt(L,1)} m
     </div>
     <div style="margin-top:6px">
       s=${fmt(clamp(p.s,0,state.h),2)} m · n=${fmt(p.n,0)} /m² · D=${fmt(p.D,3)} m (A=D) · C<sub>D</sub>=${fmt(p.CD,2)}
@@ -1771,9 +1834,7 @@ function updateVegMetricsCard(){
     <div style="margin-top:6px">
       β=${fmt(beta,4)} 1/m² · α=β·a<sub>in</sub>=${fmt(alpha,4)} 1/m · a<sub>out</sub>/a<sub>in</sub>=${fmt((aIn>0)?(aOut/aIn):0,3)}
     </div>
-    <div class="muted" style="margin-top:6px">
-      Inside patch: a(x)=a<sub>in</sub>/(1+β a<sub>in</sub> (x−x<sub>0</sub>)).
-    </div>
+    <div class="muted" style="margin-top:6px">a(x)=a<sub>in</sub>/(1+βa<sub>in</sub>(x−x<sub>0</sub>))</div>
   `;
   vegMetricsEl.innerHTML = msg;
 }
@@ -1931,7 +1992,7 @@ function frame(now){
   }
 
   // draw
-  ctx.fillStyle = "#0a1522";
+  ctx.fillStyle = "#eef5ff";
   ctx.fillRect(0,0,view.W,view.H);
 
   drawColorField(state.t);
