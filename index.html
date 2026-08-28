@@ -43,7 +43,7 @@
   button:focus-visible,input:focus-visible,select:focus-visible { outline:3px solid rgba(37,99,235,.22); outline-offset:2px; }
   .app {
     display:grid;
-    grid-template-columns:320px minmax(0,1fr);
+    grid-template-columns:340px minmax(0,1fr);
     grid-template-rows:auto minmax(0,1fr);
     grid-template-areas:"toolbar toolbar" "panel canvas";
     height:100vh;
@@ -62,21 +62,21 @@
   }
   .eyebrow { margin:0 0 3px; color:var(--accent); font-size:12px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; }
   header h1 { margin:0; color:var(--ink); font-size:22px; font-weight:760; letter-spacing:-.02em; }
-  header .badge { color:var(--muted); font-size:13px; }
   #status { margin-left:auto; padding:7px 10px; border:1px solid #d7e2ef; border-radius:999px; color:#34445a; background:#f8fafc; font-size:12px; font-weight:700; }
-  aside.panel { grid-area:panel; overflow:auto; padding:18px; border-right:1px solid var(--line); background:#fbfdff; }
+  aside.panel { grid-area:panel; overflow:auto; padding:20px; border-right:1px solid var(--line); background:#fbfdff; }
   .group { margin-bottom:18px; padding-bottom:18px; border-bottom:1px solid var(--line); }
   .group:last-child { margin-bottom:0; padding-bottom:0; border-bottom:0; }
-  .group h3 { margin:0 0 10px; color:#34445a; font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; }
-  label { display:flex; align-items:center; gap:8px; margin:9px 0 6px; color:#27364b; font-size:13px; font-weight:700; }
+  .group h3 { margin:0 0 12px; color:#34445a; font-size:13px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; }
+  label { display:flex; align-items:center; gap:8px; margin:10px 0 7px; color:#27364b; font-size:15px; font-weight:700; }
   input[type="range"],input[type="number"],select,button {
     width:100%;
-    min-height:38px;
+    min-height:42px;
     padding:8px 10px;
     border:1px solid #cbd6e4;
     border-radius:9px;
     color:var(--ink);
     background:#fff;
+    font-size:15px;
   }
   input[type="range"] { min-height:28px; padding:0; accent-color:var(--accent); }
   input[type="checkbox"] { accent-color:var(--accent); }
@@ -87,35 +87,17 @@
   #addVeg:hover,#updateVeg:hover { border-color:var(--accent-dark); background:var(--accent-dark); }
   .row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
   .row-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
-  .muted { color:var(--muted); font-size:11.5px; line-height:1.4; }
+  .muted { color:var(--muted); font-size:13px; line-height:1.45; }
   .kbd { display:inline-block; min-width:22px; padding:1px 5px; border:1px solid #cbd6e4; border-radius:5px; color:#42526a; background:#fff; font-size:11px; text-align:center; }
-  .metric { padding:11px 12px; border:1px solid var(--line); border-radius:11px; color:#24364f; background:#fff; font-size:12px; line-height:1.55; }
+  .metric { padding:12px 13px; border:1px solid var(--line); border-radius:11px; color:#24364f; background:#fff; font-size:14px; line-height:1.55; }
   .metric b { color:#172b4d; }
   .chipbar { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
   .chip { display:inline-flex; align-items:center; gap:6px; padding:5px 8px; border:1px solid #d7e2ef; border-radius:999px; color:#42526a; background:#fff; font-size:11px; }
   .dot { width:9px; height:9px; border-radius:50%; }
   .dot.a { background:var(--accent); } .dot.b { background:var(--accent2); } .dot.c { background:#eab308; } .dot.d { background:#10b981; }
-  .canvas-wrap { grid-area:canvas; position:relative; min-width:0; min-height:0; margin:18px; overflow:hidden; border:1px solid var(--line); border-radius:14px; background:#eef5ff; box-shadow:var(--shadow); }
-  canvas#view { display:block; width:100%; height:100%; background:#eef5ff; }
-  .overlay {
-    position:absolute;
-    top:14px;
-    left:14px;
-    max-width:min(540px,calc(100% - 72px));
-    padding:10px 12px;
-    border:1px solid rgba(203,214,228,.96);
-    border-radius:11px;
-    color:#334155;
-    background:rgba(255,255,255,.88);
-    box-shadow:0 8px 24px rgba(15,23,42,.08);
-    backdrop-filter:blur(4px);
-    font-size:12px;
-    pointer-events:none;
-  }
-  .overlay .line { display:flex; flex-wrap:wrap; gap:5px 12px; }
-  .overlay .line span { white-space:nowrap; }
-  .overlay b { color:#172b4d; }
-  .help { margin-top:8px; color:var(--muted); font-size:11.5px; line-height:1.5; }
+  .canvas-wrap { grid-area:canvas; position:relative; min-width:0; min-height:0; margin:18px; overflow:hidden; border:1px solid var(--line); border-radius:14px; background:#f8fbff; box-shadow:var(--shadow); }
+  canvas#view { display:block; width:100%; height:100%; background:#f8fbff; }
+  .help { margin-top:8px; color:var(--muted); font-size:13px; line-height:1.5; }
 
   /* X-view controls (zoom + pan) */
   .xzoom{
@@ -165,7 +147,6 @@
   @media (max-width:900px) {
     .app { grid-template-columns:1fr; grid-template-rows:auto auto minmax(520px,68vh); grid-template-areas:"toolbar" "panel" "canvas"; height:auto; overflow:visible; }
     header { align-items:flex-start; flex-wrap:wrap; }
-    header .badge { flex-basis:100%; order:3; }
     #status { margin-left:auto; }
     aside.panel { overflow:visible; border-right:0; border-bottom:1px solid var(--line); }
     .canvas-wrap { min-height:520px; }
@@ -186,7 +167,6 @@
       <p class="eyebrow">CE2134 · Fluid Mechanics</p>
       <h1>Wave Attenuation by Nature-Based Solutions</h1>
     </div>
-    <span class="badge">Wave field · dispersion · vegetation</span>
     <div id="status">Running</div>
   </header>
 
@@ -231,17 +211,6 @@
         </div>
       </div>
 
-    </div>
-
-    <div class="group">
-      <h3>Live results</h3>
-      <div class="metric" id="metrics">—</div>
-      <div class="chipbar" aria-label="Legend">
-        <span class="chip"><span class="dot a"></span>Velocity</span>
-        <span class="chip"><span class="dot b"></span>Field</span>
-        <span class="chip"><span class="dot c"></span>Surface η</span>
-        <span class="chip"><span class="dot d"></span>Tracers</span>
-      </div>
     </div>
 
     <div class="group">
@@ -356,7 +325,6 @@
 
   <div class="canvas-wrap">
     <canvas id="view" aria-label="Wave field visualization"></canvas>
-    <div class="overlay" id="overlay"></div>
     <div class="xctl-label zoom" id="xViewHint">view ≈ 6 λ</div>
     <div class="xzoom">
       <!-- Middle = original (~6λ). Up = zoom in. Down = zoom out. -->
@@ -598,7 +566,7 @@ function hexToRgb(hex){
   const r = (n>>16)&255, g=(n>>8)&255, b=n&255;
   return {r,g,b};
 }
-const rgbBg = hexToRgb("#eef5ff");
+const rgbBg = hexToRgb("#dbeeff");
 const rgbA  = hexToRgb(getComputedStyle(document.documentElement).getPropertyValue("--accent").trim());
 const rgbB  = hexToRgb(getComputedStyle(document.documentElement).getPropertyValue("--accent2").trim());
 
@@ -1290,7 +1258,7 @@ function drawFreeSurface(t){
   ctx.stroke();
 
   // light fill for water (under the instantaneous surface, but approximated)
-  ctx.globalAlpha = 0.06;
+  ctx.globalAlpha = 0.18;
   ctx.fillStyle = "rgba(74,163,232,1)";
   ctx.lineTo(toScreen(world.x1, world.z0).x, toScreen(world.x1, world.z0).y);
   ctx.lineTo(toScreen(world.x0, world.z0).x, toScreen(world.x0, world.z0).y);
@@ -1518,6 +1486,7 @@ function drawTracers(){
 /* ===== Overlay text ===== */
 function updateOverlay(){
   const overlay = document.getElementById("overlay");
+  if (!overlay) return;
   const Lx = world.x1 - world.x0;
 
   const a0 = state.a;
@@ -1551,6 +1520,7 @@ function updateOverlay(){
 /* ===== Metrics card ===== */
 function updateMetricsCard(){
   const m = document.getElementById("metrics");
+  if (!m) return;
   if (!Number.isFinite(state.k)){
     m.textContent = "Dispersion solution unavailable.";
     return;
@@ -1992,7 +1962,7 @@ function frame(now){
   }
 
   // draw
-  ctx.fillStyle = "#eef5ff";
+  ctx.fillStyle = "#f8fbff";
   ctx.fillRect(0,0,view.W,view.H);
 
   drawColorField(state.t);
