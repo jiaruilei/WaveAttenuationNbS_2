@@ -62,7 +62,6 @@
   }
   .eyebrow { margin:0 0 3px; color:var(--accent); font-size:12px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; }
   header h1 { margin:0; color:var(--ink); font-size:22px; font-weight:760; letter-spacing:-.02em; }
-  #status { margin-left:auto; padding:7px 10px; border:1px solid #d7e2ef; border-radius:999px; color:#34445a; background:#f8fafc; font-size:12px; font-weight:700; }
   aside.panel { grid-area:panel; overflow:auto; padding:20px; border-right:1px solid var(--line); background:#fbfdff; }
   .group { margin-bottom:18px; padding-bottom:18px; border-bottom:1px solid var(--line); }
   .group:last-child { margin-bottom:0; padding-bottom:0; border-bottom:0; }
@@ -145,7 +144,6 @@
   @media (max-width:900px) {
     .app { grid-template-columns:1fr; grid-template-rows:auto auto minmax(520px,68vh); grid-template-areas:"toolbar" "panel" "canvas"; height:auto; overflow:visible; }
     header { align-items:flex-start; flex-wrap:wrap; }
-    #status { margin-left:auto; }
     aside.panel { overflow:visible; border-right:0; border-bottom:1px solid var(--line); }
     .canvas-wrap { min-height:520px; }
   }
@@ -165,7 +163,7 @@
       <p class="eyebrow">CE2134 · Fluid Mechanics</p>
       <h1>Wave Attenuation by Nature-Based Solutions (Lab 1)</h1>
     </div>
-    <div id="status">Running</div>
+    <div id="status" hidden>Running</div>
   </header>
 
   <aside class="panel" aria-label="Controls">
@@ -270,7 +268,6 @@
         <div>
           <label for="vegS">Vegetation height s (m)</label>
           <input type="number" id="vegS" min="0" step="0.05" value="1.0" />
-          <div class="muted">0 ≤ s ≤ h</div>
         </div>
         <div>
           <label for="vegN">Density n (#/m²)</label>
@@ -284,7 +281,7 @@
           <input type="number" id="vegD" min="0" step="0.001" value="0.010" />
         </div>
         <div>
-          <label for="vegCD">Drag coefficient C<sub>D</sub></label>
+          <label for="vegCD">Drag coefficient</label>
           <input type="number" id="vegCD" min="0" step="0.05" value="1.00" />
         </div>
       </div>
