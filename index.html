@@ -88,7 +88,6 @@
   .row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
   .row-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
   .muted { color:var(--muted); font-size:13px; line-height:1.45; }
-  .kbd { display:inline-block; min-width:22px; padding:1px 5px; border:1px solid #cbd6e4; border-radius:5px; color:#42526a; background:#fff; font-size:11px; text-align:center; }
   .metric { padding:12px 13px; border:1px solid var(--line); border-radius:11px; color:#24364f; background:#fff; font-size:14px; line-height:1.55; }
   .metric b { color:#172b4d; }
   .chipbar { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
@@ -97,7 +96,6 @@
   .dot.a { background:var(--accent); } .dot.b { background:var(--accent2); } .dot.c { background:#eab308; } .dot.d { background:#10b981; }
   .canvas-wrap { grid-area:canvas; position:relative; min-width:0; min-height:0; margin:18px; overflow:hidden; border:1px solid var(--line); border-radius:14px; background:#f8fbff; box-shadow:var(--shadow); }
   canvas#view { display:block; width:100%; height:100%; background:#f8fbff; }
-  .help { margin-top:8px; color:var(--muted); font-size:13px; line-height:1.5; }
 
   /* X-view controls (zoom + pan) */
   .xzoom{
@@ -178,12 +176,10 @@
         <div>
           <label for="T">Period T (s)</label>
           <input type="range" id="T" min="1" max="25" step="0.1" value="8.0" />
-          <div class="muted"><span class="kbd">[</span> / <span class="kbd">]</span></div>
         </div>
         <div>
           <label for="h">Depth h (m)</label>
-          <input type="range" id="h" min="0.5" max="200" step="0.5" value="20" />
-          <div class="muted"><span class="kbd">−</span> / <span class="kbd">+</span></div>
+          <input type="range" id="h" min="0.5" max="200" step="0.5" value="2" />
         </div>
       </div>
 
@@ -202,12 +198,10 @@
         <div>
           <label for="viewN">View width (λ)</label>
           <input type="range" id="viewN" min="1" max="6" step="0.25" value="3.0" />
-          <div class="muted">Crests on screen</div>
         </div>
         <div>
           <label for="speed">Animation speed</label>
-          <input type="range" id="speed" min="0.1" max="3.0" step="0.1" value="1.0" />
-          <div class="muted"><span class="kbd">Space</span> pause</div>
+          <input type="range" id="speed" min="0.1" max="3.0" step="0.1" value="1.0" title="Space: pause or resume" />
         </div>
       </div>
 
@@ -241,10 +235,6 @@
         <button id="resetTime">Reset time</button>
       </div>
 
-      <div class="help">
-        Click: tracer · <b>Shift</b>+click: vegetation · <b>Alt</b>+click: remove patch.<br>
-        <span class="kbd">Space</span> pause · <span class="kbd">R</span> tracers · <span class="kbd">0</span> time
-      </div>
     </div>
 
     
@@ -252,13 +242,10 @@
       <h3>Vegetation attenuation</h3>
 
       <label style="margin:0">
-        <input type="checkbox" id="attenOn" style="width:auto" />
+        <input type="checkbox" id="attenOn" checked style="width:auto" />
         <span>Enable attenuation</span>
       </label>
 
-      <div class="muted" style="margin-top:6px">
-        1D patches use the Dalrymple et&nbsp;al. (1984) drag-dissipation model.
-      </div>
 
       <label for="vegPreset" style="margin-top:10px">Preset</label>
       <select id="vegPreset">
@@ -272,7 +259,6 @@
         <div>
           <label for="vegX0">Start x (m)</label>
           <input type="number" id="vegX0" min="0" step="0.1" value="20" />
-          <div class="muted"><b>Shift</b>+click to set</div>
         </div>
         <div>
           <label for="vegL">Patch length L (m)</label>
@@ -296,7 +282,6 @@
         <div>
           <label for="vegD">Diameter D (m)</label>
           <input type="number" id="vegD" min="0" step="0.001" value="0.010" />
-          <div class="muted">Cylinder: A = D</div>
         </div>
         <div>
           <label for="vegCD">Drag coefficient C<sub>D</sub></label>
@@ -505,7 +490,7 @@ const state = {
   // parameters
   a: 0.6,   // amplitude [m]
   T: 20.0,   // period [s]
-  h: 20.0,  // depth [m]
+  h: 2.0,   // depth [m]
   g: 9.81,
 
   // derived
@@ -534,7 +519,7 @@ const state = {
   trailMax: 220,
 
   // vegetation attenuation (Dalrymple et al., 1984)
-  attenOn: false,
+  attenOn: true,
   vegPatches: [],
   vegNextId: 1,
   vegSelectedId: null,
@@ -1764,11 +1749,11 @@ function updateVegMetricsCard(){
   if (!vegMetricsEl) return;
 
   if (!state.attenOn){
-    vegMetricsEl.innerHTML = `<div><b>Attenuation</b>: off</div><div class="muted" style="margin-top:6px">Turn it on and add a patch.</div>`;
+    vegMetricsEl.innerHTML = `<div><b>Attenuation</b>: off</div>`;
     return;
   }
   if (state.vegPatches.length === 0){
-    vegMetricsEl.innerHTML = `<div><b>Attenuation</b>: on</div><div class="muted" style="margin-top:6px">Add a patch or <span class="kbd">Shift</span>+click.</div>`;
+    vegMetricsEl.innerHTML = `<div><b>Attenuation</b>: on</div><div class="muted" style="margin-top:6px">Add a patch to start.</div>`;
     return;
   }
 
