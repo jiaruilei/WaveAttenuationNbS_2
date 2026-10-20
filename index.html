@@ -60,7 +60,6 @@
     border-bottom:1px solid var(--line);
     background:#fff;
   }
-  .eyebrow { margin:0 0 3px; color:var(--accent); font-size:12px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; }
   header h1 { margin:0; color:var(--accent); font-size:22px; font-weight:760; letter-spacing:-.02em; }
   aside.panel { grid-area:panel; overflow:auto; padding:20px; border-right:1px solid var(--line); background:#fbfdff; }
   .group { margin-bottom:18px; padding-bottom:18px; border-bottom:1px solid var(--line); }
@@ -144,9 +143,9 @@
   .wave-reduction{
     position:absolute;
     top:64px;
-    right:56px;
-    width:248px;
-    padding:16px 18px;
+    right:44px;
+    width:180px;
+    padding:12px;
     border:1px solid #cbded8;
     border-radius:12px;
     background:rgba(255,255,255,.96);
@@ -156,7 +155,7 @@
   }
   .wave-reduction h2 { margin:0; font-size:18px; line-height:1.3; color:#24364f; }
   .wave-reduction .percentage { margin:6px 0; color:#047857; font-size:44px; font-weight:800; line-height:1.15; }
-  .wave-reduction .height-comparison { color:#24364f; font-size:18px; font-weight:650; }
+  .wave-reduction .height-comparison { color:#24364f; font-size:16px; font-weight:650; }
   .wave-reduction .comparison-label { margin-top:5px; color:#5d6b7d; font-size:14px; line-height:1.35; }
 
   @media (max-width:900px) {
@@ -182,7 +181,6 @@
 
   <header>
     <div>
-      <p class="eyebrow">CE2134 · Fluid Mechanics</p>
       <h1>CFI Symposium</h1>
     </div>
     <div id="status" hidden>Running</div>
@@ -219,8 +217,9 @@
 
       <div class="row">
         <div>
-          <label for="viewN">View width (λ)</label>
-          <input type="range" id="viewN" min="1" max="6" step="0.25" value="3.0" />
+          <label for="viewWidth">View width (m)</label>
+          <input type="range" id="viewWidth" min="0.5" max="6" step="0.1" value="2.0" />
+          <output class="muted" id="viewWidthValue" for="viewWidth">2.00 m</output>
         </div>
         <div>
           <label for="speed">Animation speed</label>
@@ -308,9 +307,9 @@
       <div class="height-comparison" id="waveHeightComparison">—</div>
       <div class="comparison-label">Before → after vegetation</div>
     </section>
-    <div class="xctl-label zoom" id="xViewHint">view ≈ 6 λ</div>
+    <div class="xctl-label zoom" id="xViewHint">0.00–2.00 m</div>
     <div class="xzoom">
-      <!-- Middle = original (~6λ). Up = zoom in. Down = zoom out. -->
+      <!-- Middle = selected view width. Up = zoom in. Down = zoom out. -->
       <input id="xZoom" type="range" min="-1" max="1" step="0.01" value="0">
     </div>
     <div class="xctl-label pan">X pan</div>
@@ -500,8 +499,8 @@ const state = {
   kh: 0,
   regime: "",
 
-  // view window width in wavelengths
-  viewN: 3.0,
+  // Physical view width stays fixed when wave period or depth changes.
+  viewWidth: 2.0,
 
   
   // x-view controls
@@ -773,9 +772,11 @@ function updateDerived(){
   else if (kh > khDeep) state.regime = "deep (kh > π)";
   else state.regime = "intermediate";
 
-  // update view extents based on wavelength and depth
-  const LxNominal = state.viewN * state.lambda;   // original window (~6λ by default)
-  const LxBase = Math.max(500.0, LxNominal);      // ensure panning can cover at least 0–500 m
+  // Default view and panning domain match the 2 m demonstration tank.
+  const LxNominal = state.viewWidth;
+  const patchExtent = state.vegPatches.reduce((end, p) =>
+    Number.isFinite(p.x0) && Number.isFinite(p.x1) ? Math.max(end, p.x0, p.x1) : end, 2.0);
+  const LxBase = Math.max(patchExtent, LxNominal);
   const s = clamp(state.zoomS || 0.0, -1.0, 1.0); // slider: middle=0
   // Map slider to zoom scale in [0.25, 4.0]
   // Up (s>0): zoom in (smaller window). Down (s<0): zoom out (larger window).
@@ -783,11 +784,6 @@ function updateDerived(){
   const winW = LxNominal / zoomScale;
 
 
-  // Live hint: visible x-range in wavelengths (updates with zoom)
-  if (elXViewHint){
-    const viewLambda = winW / Math.max(1e-9, state.lambda);
-    elXViewHint.textContent = "view ≈ " + viewLambda.toFixed(2) + " λ";
-  }
   const base = Math.max(LxBase, winW);            // base must be >= window width
   const maxShift = Math.max(0.0, base - winW);
   const panX = clamp(state.panX || 0.0, 0.0, 1.0);
@@ -795,10 +791,16 @@ function updateDerived(){
 
   world.x0 = shift;
   world.x1 = shift + winW;
+  if (elXViewHint){
+    elXViewHint.textContent = `${fmt(world.x0,2)}–${fmt(world.x1,2)} m`;
+  }
 // Disable pan if no room to pan
   if (elXPan){
     elXPan.disabled = maxShift <= 1e-9;
-    if (maxShift <= 1e-9) elXPan.value = "0";
+    if (maxShift <= 1e-9){
+      elXPan.value = "0";
+      state.panX = 0;
+    }
   }
 
   world.z0 = -state.h;
@@ -1462,7 +1464,7 @@ function makeDefaultTracers(){
   for (let j=0;j<levels.length;j++){
     const z = levels[j]*state.h;
     for (let i=0;i<nX;i++){
-      const x = (i/(nX-1))* (state.viewN*state.lambda);
+      const x = (i/(nX-1))*state.viewWidth;
       state.tracers.push({X0:x, Z0:z, trail:[]});
     }
   }
@@ -1607,7 +1609,7 @@ const elT = document.getElementById("T");
 const elH = document.getElementById("h");
 const elA = document.getElementById("a");
 const elG = document.getElementById("g");
-const elViewN = document.getElementById("viewN");
+const elViewWidth = document.getElementById("viewWidth");
 const elXZoom = document.getElementById("xZoom");
 const elXPan = document.getElementById("xPan");
 const elXViewHint = document.getElementById("xViewHint");
@@ -1832,7 +1834,7 @@ function updateWaveReduction(){
   const reduction = valid && heightIn > 0 ? clamp(100*(1-heightOut/heightIn), 0, 100) : 0;
   document.getElementById("waveReductionPercent").textContent = valid ? `${fmt(reduction,1)}%` : "—";
   document.getElementById("waveHeightComparison").textContent = valid
-    ? `${fmt(100*heightIn,2)} cm → ${fmt(100*heightOut,2)} cm` : "—";
+    ? `${fmt(100*heightIn,2)} → ${fmt(100*heightOut,2)} cm` : "—";
 }
 
 function updateVegMetricsCard(){
@@ -1891,7 +1893,7 @@ function refreshFromUI(){
   state.h = parseFloat(elH.value);
   state.a = parseFloat(elA.value);
   state.g = parseFloat(elG.value);
-  state.viewN = parseFloat(elViewN.value);
+  state.viewWidth = parseFloat(elViewWidth.value);
   if (elXZoom) state.zoomS = parseFloat(elXZoom.value);
   if (elXPan) state.panX = parseFloat(elXPan.value);
   state.speed = parseFloat(elSpeed.value);
@@ -1901,6 +1903,7 @@ function refreshFromUI(){
   document.getElementById("TValue").value = `${fmt(state.T,1)} s`;
   document.getElementById("hValue").value = `${fmt(state.h,2)} m (${fmt(100*state.h,0)} cm)`;
   document.getElementById("aValue").value = `${fmt(state.a,4)} m · wave height ${Number((200*state.a).toFixed(2))} cm`;
+  document.getElementById("viewWidthValue").value = `${fmt(state.viewWidth,2)} m`;
 
   updateDerived();
   updateOverlay();
@@ -1909,7 +1912,7 @@ function refreshFromUI(){
 
 }
 
-[elT, elH, elA, elG, elViewN, elXZoom, elXPan, elSpeed].forEach(el => el.addEventListener("input", refreshFromUI));
+[elT, elH, elA, elG, elViewWidth, elXZoom, elXPan, elSpeed].forEach(el => el.addEventListener("input", refreshFromUI));
 if (elAttenOn) elAttenOn.addEventListener("change", refreshFromUI);
 
 // Vegetation events
