@@ -173,18 +173,21 @@
       <div class="row">
         <div>
           <label for="T">Period T (s)</label>
-          <input type="range" id="T" min="1" max="25" step="0.1" value="8.0" />
+          <input type="range" id="T" min="0.5" max="25" step="0.1" value="1.0" />
+          <output class="muted" id="TValue" for="T">1.0 s</output>
         </div>
         <div>
           <label for="h">Depth h (m)</label>
-          <input type="range" id="h" min="0.5" max="200" step="0.5" value="2" />
+          <input type="range" id="h" min="0.01" max="200" step="0.01" value="0.12" />
+          <output class="muted" id="hValue" for="h">0.12 m (12 cm)</output>
         </div>
       </div>
 
       <div class="row">
         <div>
           <label for="a">Amplitude a (m)</label>
-          <input type="range" id="a" min="0.01" max="2.5" step="0.01" value="0.6" />
+          <input type="range" id="a" min="0.0005" max="2.5" step="0.0005" value="0.0125" />
+          <output class="muted" id="aValue" for="a">0.0125 m · wave height 2.5 cm</output>
         </div>
         <div>
           <label for="g">Gravity g (m/s²)</label>
@@ -247,6 +250,7 @@
 
       <label for="vegPreset" style="margin-top:10px">Preset</label>
       <select id="vegPreset">
+        <option value="tank" selected>Demonstration tank</option>
         <option value="seagrass">Seagrass meadow</option>
         <option value="mangroves">Mangroves</option>
         <option value="coral">Coral reef (roughness elements)</option>
@@ -267,18 +271,18 @@
       <div class="row" style="margin-top:8px">
         <div>
           <label for="vegS">Vegetation height s (m)</label>
-          <input type="number" id="vegS" min="0" step="0.05" value="1.0" />
+          <input type="number" id="vegS" min="0" step="0.01" value="0.20" />
         </div>
         <div>
           <label for="vegN">Density n (#/m²)</label>
-          <input type="number" id="vegN" min="0" step="1" value="400" />
+          <input type="number" id="vegN" min="0" step="1" value="1953" />
         </div>
       </div>
 
       <div class="row" style="margin-top:8px">
         <div>
-          <label for="vegD">Diameter D (m)</label>
-          <input type="number" id="vegD" min="0" step="0.001" value="0.010" />
+          <label for="vegD">Stem width / diameter D (m)</label>
+          <input type="number" id="vegD" min="0" step="0.001" value="0.006" />
         </div>
         <div>
           <label for="vegCD">Drag coefficient</label>
@@ -485,9 +489,9 @@ const state = {
   speed: 1.0,
 
   // parameters
-  a: 0.6,   // amplitude [m]
-  T: 20.0,   // period [s]
-  h: 2.0,   // depth [m]
+  a: 0.0125, // amplitude [m]; wave height H = 2a = 0.025 m
+  T: 1.0,    // period [s]
+  h: 0.12,   // depth [m]
   g: 9.81,
 
   // derived
@@ -801,7 +805,11 @@ function updateDerived(){
 
   world.z0 = -state.h;
   // show a bit of air above mean surface, but don't let it dwarf the plot
-  const zTop = Math.max(2*state.a, 0.12*state.h, 0.6);
+  const visiblePatches = state.vegPatches.filter(p =>
+    Math.max(p.x0, p.x1) > world.x0 && Math.min(p.x0, p.x1) < world.x1 && p.x0 !== p.x1);
+  const plantTop = state.attenOn ? visiblePatches.reduce((top, p) =>
+    Math.max(top, 1.2 * p.s - state.h), 0) : 0;
+  const zTop = Math.max(2*state.a, 0.12*state.h, plantTop + 0.05*state.h);
   world.z1 = zTop;
 }
 
@@ -893,7 +901,7 @@ function drawAxesAndGrid(){
     const xw = world.x0 + (i/tickCount)*(world.x1-world.x0);
     const p = toScreen(xw, world.z0);
     ctx.beginPath(); ctx.moveTo(p.x, y0); ctx.lineTo(p.x, y0-8); ctx.stroke();
-    ctx.fillText(`${fmt(xw,0)} m`, p.x+2, y0-10);
+    ctx.fillText(`${fmt(xw, (world.x1-world.x0) < 10 ? 2 : 0)} m`, p.x+2, y0-10);
   }
   ctx.restore();
 }
@@ -907,7 +915,7 @@ function drawBathymetry(){
   ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(pL.x, pL.y); ctx.lineTo(pR.x, pR.y); ctx.stroke();
   ctx.fillStyle = "rgba(51,65,85,0.78)";
-  ctx.fillText(`      seabed z = −h = −${fmt(state.h,1)} m`, pL.x+8, pL.y-10);
+  ctx.fillText(`      seabed z = −h = −${fmt(state.h,2)} m`, pL.x+8, pL.y-10);
   ctx.restore();
 }
 
@@ -921,7 +929,7 @@ function drawVegetation(){
   for (const p of state.vegPatches){
     const x0 = Math.min(p.x0, p.x1);
     const x1 = Math.max(p.x0, p.x1);
-    const s = clamp(p.s, 0, state.h);
+    const s = Math.max(0, p.s);
 
     if (!(Number.isFinite(x0) && Number.isFinite(x1) && x1 > x0 && s > 0)) continue;
 
@@ -1560,6 +1568,7 @@ const vegMetricsEl = document.getElementById("vegMetrics");
 
 // Simple presets (editable; values vary widely in reality)
 const vegPresets = {
+  tank:      { s: 0.20, n: 1953, D: 0.006, CD: 1.00 },
   seagrass:  { L: 40, s: 1.0, n: 400, D: 0.010, CD: 1.00 },
   mangroves: { L: 60, s: 2.5, n:  20, D: 0.080, CD: 1.20 },
   coral:     { L: 30, s: 1.0, n:  80, D: 0.050, CD: 1.00 },
@@ -1567,6 +1576,7 @@ const vegPresets = {
 };
 
 function vegLabel(type){
+  if (type === "tank") return "Demonstration tank";
   if (type === "seagrass") return "Seagrass";
   if (type === "mangroves") return "Mangroves";
   if (type === "coral") return "Coral";
@@ -1578,7 +1588,7 @@ function applyVegPreset(presetKey){
   const p = vegPresets[presetKey];
   if (!p) return;
 
-  if (elVegL) elVegL.value = p.L;
+  if (elVegL && p.L != null) elVegL.value = p.L;
   if (elVegS) elVegS.value = p.s;
   if (elVegN) elVegN.value = p.n;
   if (elVegD) elVegD.value = p.D;
@@ -1668,6 +1678,7 @@ function addVegPatchFromInputs(overrides = {}){
   setInputsFromPatch(patch);
 
   statusEl.textContent = `Vegetation patch added: ${vegLabel(patch.type)} (${fmt(Math.min(patch.x0,patch.x1),1)}–${fmt(Math.max(patch.x0,patch.x1),1)} m)`;
+  updateDerived();
   updateOverlay();
   updateVegMetricsCard();
 }
@@ -1685,6 +1696,7 @@ function updateSelectedVegFromInputs(){
   sortVegPatches();
   renderVegList();
   statusEl.textContent = "Selected vegetation patch updated";
+  updateDerived();
   updateOverlay();
   updateVegMetricsCard();
 }
@@ -1704,6 +1716,7 @@ function deleteSelectedVeg(){
     const p = state.vegPatches.find(pp=>pp.id===state.vegSelectedId);
     setInputsFromPatch(p);
   }
+  updateDerived();
   updateOverlay();
   updateVegMetricsCard();
 }
@@ -1713,6 +1726,7 @@ function clearAllVeg(){
   state.vegSelectedId = null;
   renderVegList();
   statusEl.textContent = "All vegetation patches cleared";
+  updateDerived();
   updateOverlay();
   updateVegMetricsCard();
 }
@@ -1775,13 +1789,14 @@ function updateVegMetricsCard(){
   const msg = `
     <div><b>Dalrymple model</b></div>
     <div style="margin-top:6px">
-      a(0)=${fmt(state.a,3)} m → a(x₁)=${fmt(aViewEnd,3)} m (${fmt(pct,1)}%)
+      a(0)=${fmt(state.a,4)} m → a(x₁)=${fmt(aViewEnd,4)} m (${fmt(pct,1)}%)
     </div>
     <div style="margin-top:6px">
       <b>${vegLabel(p.type)}</b> · ${fmt(x0,1)}–${fmt(x1,1)} m · L=${fmt(L,1)} m
     </div>
     <div style="margin-top:6px">
-      s=${fmt(clamp(p.s,0,state.h),2)} m · n=${fmt(p.n,0)} /m² · D=${fmt(p.D,3)} m (A=D) · C<sub>D</sub>=${fmt(p.CD,2)}
+      Stem height s=${fmt(p.s,2)} m · submerged height=${fmt(clamp(p.s,0,state.h),2)} m<br>
+      n=${fmt(p.n,0)} /m² · D=${fmt(p.D,3)} m (A=D) · C<sub>D</sub>=${fmt(p.CD,2)}
     </div>
     <div style="margin-top:6px">
       β=${fmt(beta,4)} 1/m² · α=β·a<sub>in</sub>=${fmt(alpha,4)} 1/m · a<sub>out</sub>/a<sub>in</sub>=${fmt((aIn>0)?(aOut/aIn):0,3)}
@@ -1806,8 +1821,9 @@ function refreshFromUI(){
 
   state.attenOn = elAttenOn ? !!elAttenOn.checked : false;
 
-  // keep s input bounded by h
-  if (elVegS) elVegS.max = String(Math.max(0, state.h));
+  document.getElementById("TValue").value = `${fmt(state.T,1)} s`;
+  document.getElementById("hValue").value = `${fmt(state.h,2)} m (${fmt(100*state.h,0)} cm)`;
+  document.getElementById("aValue").value = `${fmt(state.a,4)} m · wave height ${Number((200*state.a).toFixed(2))} cm`;
 
   updateDerived();
   updateOverlay();
@@ -1925,10 +1941,10 @@ window.addEventListener("keydown", (e)=>{
     state.T = clamp(state.T + 0.2, parseFloat(elT.min), parseFloat(elT.max));
     elT.value = state.T; refreshFromUI();
   } else if (k === "-" ){
-    state.h = clamp(state.h - 1.0, parseFloat(elH.min), parseFloat(elH.max));
+    state.h = clamp(state.h - parseFloat(elH.step), parseFloat(elH.min), parseFloat(elH.max));
     elH.value = state.h; refreshFromUI();
   } else if (k === "="){
-    state.h = clamp(state.h + 1.0, parseFloat(elH.min), parseFloat(elH.max));
+    state.h = clamp(state.h + parseFloat(elH.step), parseFloat(elH.min), parseFloat(elH.max));
     elH.value = state.h; refreshFromUI();
   }
 });
@@ -1962,7 +1978,6 @@ function frame(now){
 
 /* ===== Init ===== */
 (function init(){
-  makeDefaultTracers();
   refreshFromUI();
   requestAnimationFrame(frame);
 })();
