@@ -260,11 +260,11 @@
       <div class="row" style="margin-top:8px">
         <div>
           <label for="vegX0">Start x (m)</label>
-          <input type="number" id="vegX0" min="0" step="0.1" value="20" />
+          <input type="number" id="vegX0" min="0" step="0.1" value="0.5" />
         </div>
         <div>
           <label for="vegL">Patch length L (m)</label>
-          <input type="number" id="vegL" min="0" step="0.1" value="40" />
+          <input type="number" id="vegL" min="0" step="0.1" value="1" />
         </div>
       </div>
 
@@ -1568,7 +1568,7 @@ const vegMetricsEl = document.getElementById("vegMetrics");
 
 // Simple presets (editable; values vary widely in reality)
 const vegPresets = {
-  tank:      { s: 0.20, n: 1953, D: 0.006, CD: 1.00 },
+  tank:      { L: 1, s: 0.20, n: 1953, D: 0.006, CD: 1.00 },
   seagrass:  { L: 40, s: 1.0, n: 400, D: 0.010, CD: 1.00 },
   mangroves: { L: 60, s: 2.5, n:  20, D: 0.080, CD: 1.20 },
   coral:     { L: 30, s: 1.0, n:  80, D: 0.050, CD: 1.00 },
@@ -1979,6 +1979,8 @@ function frame(now){
 /* ===== Init ===== */
 (function init(){
   refreshFromUI();
+  // Display assumption: the 1 m tank patch begins 0.5 m from the wave maker.
+  addVegPatchFromInputs();
   requestAnimationFrame(frame);
 })();
 </script>
