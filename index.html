@@ -56,11 +56,26 @@
     align-items:center;
     gap:18px;
     min-height:74px;
-    padding:14px 20px;
+    padding:10px 20px;
     border-bottom:1px solid var(--line);
     background:#fff;
   }
   header h1 { margin:0; color:var(--accent); font-size:22px; font-weight:760; letter-spacing:-.02em; }
+  .scan-link {
+    display:flex;
+    align-items:center;
+    gap:16px;
+    margin-left:auto;
+    padding-left:24px;
+    border-left:1px solid var(--line);
+    color:var(--ink);
+    text-decoration:none;
+  }
+  .scan-link:focus-visible { outline:3px solid rgba(37,99,235,.3); outline-offset:4px; border-radius:8px; }
+  .scan-copy { max-width:210px; }
+  .scan-copy strong { display:block; color:var(--accent); font-size:21px; line-height:1.25; }
+  .scan-copy span { display:block; margin-top:7px; color:var(--muted); font-size:16px; line-height:1.4; }
+  .scan-code { display:block; width:164px; height:164px; flex-shrink:0; background:#fff; }
   aside.panel { grid-area:panel; overflow:auto; padding:20px; border-right:1px solid var(--line); background:#fbfdff; }
   .group { margin-bottom:18px; padding-bottom:18px; border-bottom:1px solid var(--line); }
   .group:last-child { margin-bottom:0; padding-bottom:0; border-bottom:0; }
@@ -167,6 +182,7 @@
   @media (max-width:900px) {
     .app { grid-template-columns:1fr; grid-template-rows:auto auto minmax(520px,68vh); grid-template-areas:"toolbar" "panel" "canvas"; height:auto; overflow:visible; }
     header { align-items:flex-start; flex-wrap:wrap; }
+    .scan-link { display:none; }
     aside.panel { overflow:visible; border-right:0; border-bottom:1px solid var(--line); }
     .canvas-wrap { min-height:520px; }
   }
@@ -191,6 +207,13 @@
     <div>
       <h1>CFI Symposium</h1>
     </div>
+    <a class="scan-link" href="https://jiaruilei.github.io/WaveAttenuationNbS_2/" aria-label="Open the CFI Symposium wave tank illustration">
+      <div class="scan-copy">
+        <strong>Try it on your phone</strong>
+        <span>Scan the QR code to explore the wave tank.</span>
+      </div>
+      <img class="scan-code" src="assets/wave-tank-qr.svg" width="164" height="164" alt="QR code for this interactive wave tank" />
+    </a>
     <div id="status" hidden>Running</div>
   </header>
 
