@@ -315,7 +315,7 @@
   </aside>
 
   <div class="canvas-wrap">
-    <canvas id="view" aria-label="Wave field visualization" title="Click inside the water to add a jellyfish. Press R to reset tracers."></canvas>
+    <canvas id="view" aria-label="Wave field visualization" title="Click inside the water to add a jellyfish. Press C to clear tracers or R to reset them."></canvas>
     <section class="wave-reduction" aria-labelledby="waveReductionTitle" aria-live="polite" aria-atomic="true">
       <h2 id="waveReductionTitle">Wave height reduction</h2>
       <div class="percentage" id="waveReductionPercent">—</div>
@@ -528,6 +528,7 @@ const state = {
 
   // tracers: mean positions + trail
   tracers: [],
+  tracersCleared: false,
   tracerLayout: null,
   trailMax: 220,
 
@@ -826,8 +827,8 @@ function updateDerived(){
   const zTop = Math.max(2*state.a, 0.12*state.h, plantTop + 0.05*state.h);
   world.z1 = zTop;
   const layout = state.tracerLayout;
-  if (!layout || state.tracers.length === 0 || layout.h !== state.h ||
-      layout.x0 !== world.x0 || layout.x1 !== world.x1) {
+  if (!state.tracersCleared && (!layout || state.tracers.length === 0 || layout.h !== state.h ||
+      layout.x0 !== world.x0 || layout.x1 !== world.x1)) {
     makeDefaultTracers();
   }
 }
@@ -1477,6 +1478,7 @@ function drawVelocityArrows(t){
 /* ===== Tracers ===== */
 function makeDefaultTracers(){
   state.tracers = [];
+  state.tracersCleared = false;
   state.tracerLayout = { h:state.h, x0:world.x0, x1:world.x1 };
   // mean positions on a grid
   const nX = 10;
@@ -2059,12 +2061,15 @@ canvas.addEventListener("mousedown", (ev)=>{
   }
 
   if (p.x < world.x0 || p.x > world.x1 || !inWater(p.z)) return;
+  state.tracersCleared = false;
+  state.tracerLayout = { h:state.h, x0:world.x0, x1:world.x1 };
   state.tracers.push({X0:p.x, Z0:p.z, trail:[]});
   statusEl.textContent = "Jellyfish tracer added";
 });
 
 /* ===== Shortcuts ===== */
 window.addEventListener("keydown", (e)=>{
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
   // Typing a number must not trigger the animation's keyboard shortcuts.
   if (e.target instanceof Element && e.target.closest("input, select, textarea, button, [contenteditable]")) return;
   const k = e.key;
@@ -2072,6 +2077,10 @@ window.addEventListener("keydown", (e)=>{
     state.paused = !state.paused;
     statusEl.textContent = state.paused ? "Paused" : "Running";
     e.preventDefault();
+  } else if (k.toLowerCase() === "c"){
+    state.tracers = [];
+    state.tracersCleared = true;
+    statusEl.textContent = "Tracers cleared";
   } else if (k.toLowerCase() === "r"){
     makeDefaultTracers();
     statusEl.textContent = "Tracers reset";
