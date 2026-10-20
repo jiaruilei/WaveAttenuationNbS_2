@@ -77,6 +77,10 @@
     font-size:15px;
   }
   input[type="range"] { min-height:28px; padding:0; accent-color:var(--accent); }
+  .slider-value-row { display:flex; align-items:center; gap:6px; margin-top:4px; }
+  input.slider-value { width:96px; min-width:0; min-height:34px; padding:5px 7px; font-weight:650; font-variant-numeric:tabular-nums; }
+  .slider-hint { display:block; margin-top:4px; }
+  .controls-help { margin:0 0 8px; }
   input[type="checkbox"] { accent-color:var(--accent); }
   button { color:#233651; font-weight:750; cursor:pointer; transition:.15s ease background,.15s ease border-color,.15s ease transform; }
   button:hover { border-color:#9eb2ca; background:#f0f5fb; }
@@ -189,17 +193,25 @@
   <aside class="panel" aria-label="Controls">
     <div class="group">
       <h3>Wave Parameters</h3>
+      <p class="muted controls-help">Click a number to type a value. Press Enter or click away to apply.</p>
 
       <div class="row">
         <div>
           <label for="T">Period T (s)</label>
           <input type="range" id="T" min="0.5" max="25" step="0.1" value="1.0" />
-          <output class="muted" id="TValue" for="T">1.0 s</output>
+          <div class="slider-value-row">
+            <input type="number" class="slider-value" id="TValue" aria-label="Period value (s)" value="1.0" />
+            <span class="muted">s</span>
+          </div>
         </div>
         <div>
           <label for="h">Depth h (m)</label>
-          <input type="range" id="h" min="0.01" max="200" step="0.01" value="0.12" />
-          <output class="muted" id="hValue" for="h">0.12 m (12 cm)</output>
+          <input type="range" id="h" min="0.05" max="0.30" step="0.001" value="0.12" aria-describedby="hHint" />
+          <div class="slider-value-row">
+            <input type="number" class="slider-value" id="hValue" aria-label="Water depth value (m)" aria-describedby="hHint" value="0.120" />
+            <span class="muted">m</span>
+          </div>
+          <span class="muted slider-hint" id="hHint">12 cm · range 5–30 cm</span>
         </div>
       </div>
 
@@ -207,7 +219,11 @@
         <div>
           <label for="a">Amplitude a (m)</label>
           <input type="range" id="a" min="0.0005" max="2.5" step="0.0005" value="0.0125" />
-          <output class="muted" id="aValue" for="a">0.0125 m · wave height 2.5 cm</output>
+          <div class="slider-value-row">
+            <input type="number" class="slider-value" id="aValue" aria-label="Amplitude value (m)" aria-describedby="aHint" value="0.0125" />
+            <span class="muted">m</span>
+          </div>
+          <span class="muted slider-hint" id="aHint">Wave height 2.5 cm</span>
         </div>
         <div>
           <label for="g">Gravity g (m/s²)</label>
@@ -219,11 +235,18 @@
         <div>
           <label for="viewWidth">View width (m)</label>
           <input type="range" id="viewWidth" min="0.5" max="6" step="0.1" value="2.0" />
-          <output class="muted" id="viewWidthValue" for="viewWidth">2.00 m</output>
+          <div class="slider-value-row">
+            <input type="number" class="slider-value" id="viewWidthValue" aria-label="View width value (m)" value="2.00" />
+            <span class="muted">m</span>
+          </div>
         </div>
         <div>
           <label for="speed">Animation speed</label>
           <input type="range" id="speed" min="0.1" max="3.0" step="0.1" value="1.0" title="Space: pause or resume" />
+          <div class="slider-value-row">
+            <input type="number" class="slider-value" id="speedValue" aria-label="Animation speed value" value="1.0" />
+            <span class="muted">×</span>
+          </div>
         </div>
       </div>
 
@@ -1616,6 +1639,40 @@ const elXViewHint = document.getElementById("xViewHint");
 const elSpeed = document.getElementById("speed");
 const statusEl = document.getElementById("status");
 
+// Numeric companions use the same limits and increments as their sliders.
+const sliderValues = [
+  [elT, "TValue", 1],
+  [elH, "hValue", 3],
+  [elA, "aValue", 4],
+  [elViewWidth, "viewWidthValue", 2],
+  [elSpeed, "speedValue", 1]
+].map(([slider, id, digits]) => {
+  const input = document.getElementById(id);
+  for (const attr of ["min", "max", "step"]) input[attr] = slider[attr];
+  const restore = () => { input.value = fmt(Number(slider.value), digits); };
+  const commit = () => {
+    // Let the range input clamp and round to its supported increments.
+    if (Number.isFinite(input.valueAsNumber)) slider.value = input.value;
+    refreshFromUI();
+    restore();
+  };
+  input.addEventListener("focus", () => input.select());
+  input.addEventListener("change", commit);
+  input.addEventListener("blur", commit);
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      commit();
+      input.blur();
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      restore();
+      input.blur();
+    }
+  });
+  return { slider, input, restore };
+});
+
 // Vegetation controls
 const elAttenOn = document.getElementById("attenOn");
 const elVegPreset = document.getElementById("vegPreset");
@@ -1900,10 +1957,11 @@ function refreshFromUI(){
 
   state.attenOn = elAttenOn ? !!elAttenOn.checked : false;
 
-  document.getElementById("TValue").value = `${fmt(state.T,1)} s`;
-  document.getElementById("hValue").value = `${fmt(state.h,2)} m (${fmt(100*state.h,0)} cm)`;
-  document.getElementById("aValue").value = `${fmt(state.a,4)} m · wave height ${Number((200*state.a).toFixed(2))} cm`;
-  document.getElementById("viewWidthValue").value = `${fmt(state.viewWidth,2)} m`;
+  for (const { input, restore } of sliderValues) {
+    if (document.activeElement !== input) restore();
+  }
+  document.getElementById("hHint").textContent = `${Number((100*state.h).toFixed(1))} cm · range 5–30 cm`;
+  document.getElementById("aHint").textContent = `Wave height ${Number((200*state.a).toFixed(2))} cm`;
 
   updateDerived();
   updateOverlay();
@@ -1983,6 +2041,8 @@ canvas.addEventListener("mousedown", (ev)=>{
 
 /* ===== Shortcuts ===== */
 window.addEventListener("keydown", (e)=>{
+  // Typing a number must not trigger the animation's keyboard shortcuts.
+  if (e.target instanceof Element && e.target.closest("input, select, textarea, button, [contenteditable]")) return;
   const k = e.key;
   if (k === " "){
     state.paused = !state.paused;
