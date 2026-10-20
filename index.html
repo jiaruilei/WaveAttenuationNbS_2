@@ -315,7 +315,7 @@
   </aside>
 
   <div class="canvas-wrap">
-    <canvas id="view" aria-label="Wave field visualization"></canvas>
+    <canvas id="view" aria-label="Wave field visualization" title="Click inside the water to add a jellyfish. Press R to reset tracers."></canvas>
     <section class="wave-reduction" aria-labelledby="waveReductionTitle" aria-live="polite" aria-atomic="true">
       <h2 id="waveReductionTitle">Wave height reduction</h2>
       <div class="percentage" id="waveReductionPercent">—</div>
@@ -523,11 +523,12 @@ const state = {
   panX: 0.0,  // [0,1]
 // display options
   showArrows: false,
-  showTracers: false,
+  showTracers: true,
   field: "none",
 
   // tracers: mean positions + trail
   tracers: [],
+  tracerLayout: null,
   trailMax: 220,
 
   // vegetation attenuation (Dalrymple et al., 1984)
@@ -824,6 +825,11 @@ function updateDerived(){
     Math.max(top, 1.2 * p.s - state.h), 0);
   const zTop = Math.max(2*state.a, 0.12*state.h, plantTop + 0.05*state.h);
   world.z1 = zTop;
+  const layout = state.tracerLayout;
+  if (!layout || state.tracers.length === 0 || layout.h !== state.h ||
+      layout.x0 !== world.x0 || layout.x1 !== world.x1) {
+    makeDefaultTracers();
+  }
 }
 
 function phase(x, t){ return state.k*x - state.omega*t; }
@@ -1471,13 +1477,14 @@ function drawVelocityArrows(t){
 /* ===== Tracers ===== */
 function makeDefaultTracers(){
   state.tracers = [];
+  state.tracerLayout = { h:state.h, x0:world.x0, x1:world.x1 };
   // mean positions on a grid
   const nX = 10;
   const levels = [-0.2, -0.6, -0.85]; // relative depths
   for (let j=0;j<levels.length;j++){
     const z = levels[j]*state.h;
     for (let i=0;i<nX;i++){
-      const x = (i/(nX-1))*state.viewWidth;
+      const x = world.x0 + ((i+0.5)/nX)*(world.x1-world.x0);
       state.tracers.push({X0:x, Z0:z, trail:[]});
     }
   }
@@ -1515,6 +1522,23 @@ function drawTracers(){
   if (!state.showTracers) return;
 
   ctx.save();
+  // Keep jellyfish and their trails within the visible water, above the bed.
+  const bedLeft = toScreen(world.x0, -state.h);
+  const bedRight = toScreen(world.x1, -state.h);
+  ctx.beginPath();
+  ctx.rect(0, 0, view.W, bedLeft.y);
+  ctx.clip();
+  ctx.beginPath();
+  const surfaceSteps = Math.max(80, Math.floor(view.W/8));
+  for (let i=0; i<=surfaceSteps; i++){
+    const x = world.x0 + (i/surfaceSteps)*(world.x1-world.x0);
+    const p = toScreen(x, eta(x, state.t));
+    if (i===0) ctx.moveTo(p.x,p.y); else ctx.lineTo(p.x,p.y);
+  }
+  ctx.lineTo(bedRight.x,bedRight.y);
+  ctx.lineTo(bedLeft.x,bedLeft.y);
+  ctx.closePath();
+  ctx.clip();
   ctx.strokeStyle = "rgba(4,120,87,0.72)";
   ctx.fillStyle = "rgba(4,120,87,0.90)";
   ctx.lineWidth = 1.6;
@@ -1533,11 +1557,11 @@ function drawTracers(){
     }
 
     // current tracer marker: jellyfish GIF replacing the scatter dot
-    if (tr.trail.length){
-      const cur = tr.trail[tr.trail.length-1];
+    {
+      const cur = tracerPos(tr, state.t);
       const pc = toScreen(cur.x, cur.z);
 
-      const tracerFrame = getJellyfishTracerFrame(performance.now());
+      const tracerFrame = getJellyfishTracerFrame(state.t*1000);
       if (tracerFrame && tracerFrame.complete && tracerFrame.naturalWidth > 0){
         ctx.drawImage(
           tracerFrame,
@@ -1788,6 +1812,7 @@ function addVegPatchFromInputs(overrides = {}){
 
   statusEl.textContent = `Vegetation patch added: ${vegLabel(patch.type)} (${fmt(Math.min(patch.x0,patch.x1),1)}–${fmt(Math.max(patch.x0,patch.x1),1)} m)`;
   updateDerived();
+  for (const tr of state.tracers) tr.trail = [];
   updateOverlay();
   updateVegMetricsCard();
 }
@@ -1806,6 +1831,7 @@ function updateSelectedVegFromInputs(){
   renderVegList();
   statusEl.textContent = "Selected vegetation patch updated";
   updateDerived();
+  for (const tr of state.tracers) tr.trail = [];
   updateOverlay();
   updateVegMetricsCard();
 }
@@ -1826,6 +1852,7 @@ function deleteSelectedVeg(){
     setInputsFromPatch(p);
   }
   updateDerived();
+  for (const tr of state.tracers) tr.trail = [];
   updateOverlay();
   updateVegMetricsCard();
 }
@@ -1836,6 +1863,7 @@ function clearAllVeg(){
   renderVegList();
   statusEl.textContent = "All vegetation patches cleared";
   updateDerived();
+  for (const tr of state.tracers) tr.trail = [];
   updateOverlay();
   updateVegMetricsCard();
 }
@@ -1939,6 +1967,7 @@ function updateVegMetricsCard(){
 }
 
 function refreshFromUI(){
+  const previous = { T:state.T, a:state.a };
   state.T = parseFloat(elT.value);
   state.h = parseFloat(elH.value);
   // The control shows full wave height in cm; the model uses amplitude in m.
@@ -1954,6 +1983,9 @@ function refreshFromUI(){
   document.getElementById("hHint").textContent = `${Number((100*state.h).toFixed(1))} cm · range 5 cm–5 m`;
 
   updateDerived();
+  if (state.T !== previous.T || state.a !== previous.a) {
+    for (const tr of state.tracers) tr.trail = [];
+  }
   updateOverlay();
   updateMetricsCard();
   updateVegMetricsCard();
@@ -2003,7 +2035,7 @@ if (btnClearVeg) btnClearVeg.addEventListener("click", ()=>{
   clearAllVeg();
 });
 
-/* ===== Vegetation shortcuts ===== */
+/* ===== Click to add tracers; modified clicks edit vegetation ===== */
 canvas.addEventListener("mousedown", (ev)=>{
   const r = canvas.getBoundingClientRect();
   const p = toWorld(ev.clientX - r.left, ev.clientY - r.top);
@@ -2026,6 +2058,9 @@ canvas.addEventListener("mousedown", (ev)=>{
     return;
   }
 
+  if (p.x < world.x0 || p.x > world.x1 || !inWater(p.z)) return;
+  state.tracers.push({X0:p.x, Z0:p.z, trail:[]});
+  statusEl.textContent = "Jellyfish tracer added";
 });
 
 /* ===== Shortcuts ===== */
@@ -2037,22 +2072,25 @@ window.addEventListener("keydown", (e)=>{
     state.paused = !state.paused;
     statusEl.textContent = state.paused ? "Paused" : "Running";
     e.preventDefault();
+  } else if (k.toLowerCase() === "r"){
+    makeDefaultTracers();
+    statusEl.textContent = "Tracers reset";
   } else if (k === "0"){
     state.t = 0;
     for (const tr of state.tracers) tr.trail = [];
     statusEl.textContent = "Time reset";
   } else if (k === "["){
-    state.T = clamp(state.T - 0.2, parseFloat(elT.min), parseFloat(elT.max));
-    elT.value = state.T; refreshFromUI();
+    elT.value = clamp(state.T - 0.2, parseFloat(elT.min), parseFloat(elT.max));
+    refreshFromUI();
   } else if (k === "]"){
-    state.T = clamp(state.T + 0.2, parseFloat(elT.min), parseFloat(elT.max));
-    elT.value = state.T; refreshFromUI();
+    elT.value = clamp(state.T + 0.2, parseFloat(elT.min), parseFloat(elT.max));
+    refreshFromUI();
   } else if (k === "-" ){
-    state.h = clamp(state.h - parseFloat(elH.step), parseFloat(elH.min), parseFloat(elH.max));
-    elH.value = state.h; refreshFromUI();
+    elH.value = clamp(state.h - parseFloat(elH.step), parseFloat(elH.min), parseFloat(elH.max));
+    refreshFromUI();
   } else if (k === "="){
-    state.h = clamp(state.h + parseFloat(elH.step), parseFloat(elH.min), parseFloat(elH.max));
-    elH.value = state.h; refreshFromUI();
+    elH.value = clamp(state.h + parseFloat(elH.step), parseFloat(elH.min), parseFloat(elH.max));
+    refreshFromUI();
   }
 });
 
@@ -2063,6 +2101,7 @@ function frame(now){
 
   if (!state.paused){
     state.t += dtReal * state.speed;
+    updateTracers(state.t);
   }
 
   // draw
@@ -2074,11 +2113,11 @@ function frame(now){
   drawVegetation();
   drawAmplitudeEnvelope();
   drawFreeSurface(state.t);
+  drawTracers();
   drawMeanSurface();
   drawBathymetry();
   drawXAxisLabels();
   drawVelocityArrows(state.t);
-  drawTracers();
 
   requestAnimationFrame(frame);
 }
