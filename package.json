@@ -1,0 +1,12 @@
+{
+  "name": "wave-attenuation-nbs",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Interactive wave attenuation demonstration for CFI Symposium",
+  "scripts": {
+    "vendor:mathjax": "node scripts/vendor-mathjax.cjs"
+  },
+  "devDependencies": {
+    "mathjax": "4.1.3"
+  }
+}

@@ -80,7 +80,6 @@
   .slider-value-row { display:flex; align-items:center; gap:6px; margin-top:4px; }
   input.slider-value { width:96px; min-width:0; min-height:34px; padding:5px 7px; font-weight:650; font-variant-numeric:tabular-nums; }
   .slider-hint { display:block; margin-top:4px; }
-  .controls-help { margin:0 0 8px; }
   input[type="checkbox"] { accent-color:var(--accent); }
   button { color:#233651; font-weight:750; cursor:pointer; transition:.15s ease background,.15s ease border-color,.15s ease transform; }
   button:hover { border-color:#9eb2ca; background:#f0f5fb; }
@@ -92,6 +91,9 @@
   .muted { color:var(--muted); font-size:13px; line-height:1.45; }
   .metric { padding:12px 13px; border:1px solid var(--line); border-radius:11px; color:#24364f; background:#fff; font-size:14px; line-height:1.55; }
   .metric b { color:#172b4d; }
+  [data-tex] { display:inline-block; }
+  [data-tex] mjx-container { margin:0 !important; }
+  .math-equation { overflow-x:auto; padding:4px 0; }
   .chipbar { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
   .chip { display:inline-flex; align-items:center; gap:6px; padding:5px 8px; border:1px solid #d7e2ef; border-radius:999px; color:#42526a; background:#fff; font-size:11px; }
   .dot { width:9px; height:9px; border-radius:50%; }
@@ -179,6 +181,8 @@
   }
 
 </style>
+<script defer src="math-rendering.js"></script>
+<script defer src="vendor/mathjax/tex-svg.js"></script>
 </head>
 <body>
 <div class="app">
@@ -193,41 +197,35 @@
   <aside class="panel" aria-label="Controls">
     <div class="group">
       <h3>Wave Parameters</h3>
-      <p class="muted controls-help">Click a number to type a value. Press Enter or click away to apply.</p>
 
       <div class="row">
         <div>
-          <label for="T">Period T (s)</label>
-          <input type="range" id="T" min="0.5" max="25" step="0.1" value="1.0" />
+          <label for="T"><span>Period <span data-tex="T">T</span> (s)</span></label>
+          <input type="range" id="T" min="0.5" max="10" step="0.1" value="1.0" />
           <div class="slider-value-row">
             <input type="number" class="slider-value" id="TValue" aria-label="Period value (s)" value="1.0" />
             <span class="muted">s</span>
           </div>
         </div>
         <div>
-          <label for="h">Depth h (m)</label>
-          <input type="range" id="h" min="0.05" max="0.30" step="0.001" value="0.12" aria-describedby="hHint" />
+          <label for="h"><span>Depth <span data-tex="h">h</span> (m)</span></label>
+          <input type="range" id="h" min="0.05" max="5" step="0.001" value="0.12" aria-describedby="hHint" />
           <div class="slider-value-row">
             <input type="number" class="slider-value" id="hValue" aria-label="Water depth value (m)" aria-describedby="hHint" value="0.120" />
             <span class="muted">m</span>
           </div>
-          <span class="muted slider-hint" id="hHint">12 cm · range 5–30 cm</span>
+          <span class="muted slider-hint" id="hHint">12 cm · range 5 cm–5 m</span>
         </div>
       </div>
 
-      <div class="row">
+      <div>
         <div>
-          <label for="a">Amplitude a (m)</label>
-          <input type="range" id="a" min="0.0005" max="2.5" step="0.0005" value="0.0125" />
+          <label for="waveHeight"><span>Wave height <span data-tex="H">H</span> (cm)</span></label>
+          <input type="range" id="waveHeight" min="1" max="50" step="0.1" value="2.5" />
           <div class="slider-value-row">
-            <input type="number" class="slider-value" id="aValue" aria-label="Amplitude value (m)" aria-describedby="aHint" value="0.0125" />
-            <span class="muted">m</span>
+            <input type="number" class="slider-value" id="waveHeightValue" aria-label="Wave height value (cm)" value="2.5" />
+            <span class="muted">cm</span>
           </div>
-          <span class="muted slider-hint" id="aHint">Wave height 2.5 cm</span>
-        </div>
-        <div>
-          <label for="g">Gravity g (m/s²)</label>
-          <input type="number" id="g" min="1" max="30" step="0.01" value="9.81" />
         </div>
       </div>
 
@@ -255,12 +253,6 @@
     <div class="group">
       <h3>Vegetation attenuation</h3>
 
-      <label style="margin:0">
-        <input type="checkbox" id="attenOn" checked style="width:auto" />
-        <span>Enable attenuation</span>
-      </label>
-
-
       <label for="vegPreset" style="margin-top:10px">Preset</label>
       <select id="vegPreset">
         <option value="tank" selected>Demonstration tank</option>
@@ -272,33 +264,33 @@
 
       <div class="row" style="margin-top:8px">
         <div>
-          <label for="vegX0">Start x (m)</label>
+          <label for="vegX0"><span>Start <span data-tex="x_0">x₀</span> (m)</span></label>
           <input type="number" id="vegX0" min="0" step="0.1" value="0.5" />
         </div>
         <div>
-          <label for="vegL">Patch length L (m)</label>
+          <label for="vegL"><span>Patch length <span data-tex="L">L</span> (m)</span></label>
           <input type="number" id="vegL" min="0" step="0.1" value="1" />
         </div>
       </div>
 
       <div class="row" style="margin-top:8px">
         <div>
-          <label for="vegS">Vegetation height s (m)</label>
+          <label for="vegS"><span>Vegetation height <span data-tex="s">s</span> (m)</span></label>
           <input type="number" id="vegS" min="0" step="0.01" value="0.20" />
         </div>
         <div>
-          <label for="vegN">Density n (#/m²)</label>
+          <label for="vegN"><span>Density <span data-tex="n">n</span> (<span data-tex="\mathrm{m}^{-2}">m⁻²</span>)</span></label>
           <input type="number" id="vegN" min="0" step="1" value="1953" />
         </div>
       </div>
 
       <div class="row" style="margin-top:8px">
         <div>
-          <label for="vegD">Stem width / diameter D (m)</label>
+          <label for="vegD"><span>Stem diameter <span data-tex="D">D</span> (m)</span></label>
           <input type="number" id="vegD" min="0" step="0.001" value="0.006" />
         </div>
         <div>
-          <label for="vegCD">Drag coefficient</label>
+          <label for="vegCD"><span>Drag coefficient <span data-tex="C_D">C<sub>D</sub></span></span></label>
           <input type="number" id="vegCD" min="0" step="0.05" value="1.50" />
         </div>
       </div>
@@ -511,7 +503,7 @@ const state = {
   a: 0.0125, // amplitude [m]; wave height H = 2a = 0.025 m
   T: 1.0,    // period [s]
   h: 0.12,   // depth [m]
-  g: 9.81,
+  g: 9.81,  // fixed gravitational acceleration [m/s²]
 
   // derived
   omega: 0,
@@ -539,7 +531,6 @@ const state = {
   trailMax: 220,
 
   // vegetation attenuation (Dalrymple et al., 1984)
-  attenOn: true,
   vegPatches: [],
   vegNextId: 1,
   vegSelectedId: null,
@@ -643,7 +634,6 @@ function vegBeta(p){
   //   a(x)/a_in = 1 / (1 + α (x-x0))
   //   α = (8 k C_D / (3π)) n A a_in * (sinh^3(ks) + 3 sinh(ks)) / (3 sinh(kh) (sinh(2kh) + 2kh))
   // so β = α/a_in is the same expression without a_in.
-  if (!state.attenOn) return 0;
 
   const k = state.k;
   const h = state.h;
@@ -675,7 +665,7 @@ function ampAt(x){
   // Piecewise attenuation through ordered vegetation patches.
   // Input boundary amplitude at x=0 is state.a.
   let a = state.a;
-  if (!state.attenOn || state.vegPatches.length === 0) return a;
+  if (state.vegPatches.length === 0) return a;
 
   const xq = x;
 
@@ -830,15 +820,15 @@ function updateDerived(){
   // show a bit of air above mean surface, but don't let it dwarf the plot
   const visiblePatches = state.vegPatches.filter(p =>
     Math.max(p.x0, p.x1) > world.x0 && Math.min(p.x0, p.x1) < world.x1 && p.x0 !== p.x1);
-  const plantTop = state.attenOn ? visiblePatches.reduce((top, p) =>
-    Math.max(top, 1.2 * p.s - state.h), 0) : 0;
+  const plantTop = visiblePatches.reduce((top, p) =>
+    Math.max(top, 1.2 * p.s - state.h), 0);
   const zTop = Math.max(2*state.a, 0.12*state.h, plantTop + 0.05*state.h);
   world.z1 = zTop;
 }
 
 function phase(x, t){ return state.k*x - state.omega*t; }
 
-// Local amplitude (may vary with x if vegetation attenuation is enabled)
+// Local amplitude varies with x as waves pass through vegetation.
 function aLocal(x){ return ampAt(x); }
 
 function eta(x, t){ return aLocal(x) * Math.cos(phase(x,t)); }
@@ -1011,7 +1001,7 @@ function drawBathymetry(){
 
 
 function drawVegetation(){
-  if (!state.attenOn || state.vegPatches.length === 0) return;
+  if (state.vegPatches.length === 0) return;
 
   ctx.save();
   ctx.lineWidth = 1.2;
@@ -1281,7 +1271,7 @@ function drawVegetation(){
 }
 
 function drawAmplitudeEnvelope(){
-  if (!state.attenOn || !state.showEnvelope) return;
+  if (!state.showEnvelope) return;
 
   const N = Math.max(260, Math.floor(view.W/3));
   ctx.save();
@@ -1575,7 +1565,7 @@ function updateOverlay(){
 
   const a0 = state.a;
   const aEnd = ampAt(world.x1);
-  const vegInfo = state.attenOn ? `${state.vegPatches.length} patch(es)` : "off";
+  const vegInfo = `${state.vegPatches.length} patch(es)`;
 
   overlay.innerHTML = `
     <div class="line">
@@ -1630,8 +1620,7 @@ function updateMetricsCard(){
 /* ===== UI wiring ===== */
 const elT = document.getElementById("T");
 const elH = document.getElementById("h");
-const elA = document.getElementById("a");
-const elG = document.getElementById("g");
+const elWaveHeight = document.getElementById("waveHeight");
 const elViewWidth = document.getElementById("viewWidth");
 const elXZoom = document.getElementById("xZoom");
 const elXPan = document.getElementById("xPan");
@@ -1643,7 +1632,7 @@ const statusEl = document.getElementById("status");
 const sliderValues = [
   [elT, "TValue", 1],
   [elH, "hValue", 3],
-  [elA, "aValue", 4],
+  [elWaveHeight, "waveHeightValue", 1],
   [elViewWidth, "viewWidthValue", 2],
   [elSpeed, "speedValue", 1]
 ].map(([slider, id, digits]) => {
@@ -1674,7 +1663,6 @@ const sliderValues = [
 });
 
 // Vegetation controls
-const elAttenOn = document.getElementById("attenOn");
 const elVegPreset = document.getElementById("vegPreset");
 const elVegX0 = document.getElementById("vegX0");
 const elVegL = document.getElementById("vegL");
@@ -1794,8 +1782,6 @@ function addVegPatchFromInputs(overrides = {}){
   state.vegPatches.push(patch);
   sortVegPatches();
   state.vegSelectedId = patch.id;
-  if (elAttenOn) elAttenOn.checked = true;
-  state.attenOn = true;
 
   renderVegList();
   setInputsFromPatch(patch);
@@ -1898,10 +1884,6 @@ function updateVegMetricsCard(){
   updateWaveReduction();
   if (!vegMetricsEl) return;
 
-  if (!state.attenOn){
-    vegMetricsEl.innerHTML = `<div><b>Attenuation</b>: off</div>`;
-    return;
-  }
   if (state.vegPatches.length === 0){
     vegMetricsEl.innerHTML = `<div><b>Attenuation</b>: on</div><div class="muted" style="margin-top:6px">Add a patch to start.</div>`;
     return;
@@ -1925,43 +1907,51 @@ function updateVegMetricsCard(){
   const aViewEnd = ampAt(world.x1);
   const pct = (state.a > 0) ? (100 * aViewEnd / state.a) : 0;
 
-  const msg = `
+  const msg = String.raw`
     <div><b>Dalrymple model</b></div>
     <div style="margin-top:6px">
-      a(0)=${fmt(state.a,4)} m → a(x₁)=${fmt(aViewEnd,4)} m (${fmt(pct,1)}% remaining at view end)
+      <span data-tex="a(0)">a(0)</span> = ${fmt(state.a,4)} m →
+      <span data-tex="a(x_1)">a(x₁)</span> = ${fmt(aViewEnd,4)} m
+      (${fmt(pct,1)}% remaining at view end)
     </div>
     <div style="margin-top:6px">
-      <b>${vegLabel(p.type)}</b> · ${fmt(x0,1)}–${fmt(x1,1)} m · L=${fmt(L,1)} m
+      <b>${vegLabel(p.type)}</b> · ${fmt(x0,1)}–${fmt(x1,1)} m ·
+      <span data-tex="L">L</span> = ${fmt(L,1)} m
     </div>
     <div style="margin-top:6px">
-      Stem height s=${fmt(p.s,2)} m · submerged height=${fmt(clamp(p.s,0,state.h),2)} m<br>
-      n=${fmt(p.n,0)} /m² · D=${fmt(p.D,3)} m (A=D) · C<sub>D</sub>=${fmt(p.CD,2)}
+      Stem height <span data-tex="s">s</span> = ${fmt(p.s,2)} m · submerged height = ${fmt(clamp(p.s,0,state.h),3)} m<br>
+      <span data-tex="n">n</span> = ${fmt(p.n,0)} <span data-tex="\mathrm{m}^{-2}">m⁻²</span> ·
+      <span data-tex="D">D</span> = ${fmt(p.D,3)} m
+      (<span data-tex="A=D">A = D</span>) ·
+      <span data-tex="C_D">C<sub>D</sub></span> = ${fmt(p.CD,2)}
     </div>
     <div style="margin-top:6px">
-      β=${fmt(beta,4)} 1/m² · α=β·a<sub>in</sub>=${fmt(alpha,4)} 1/m · a<sub>out</sub>/a<sub>in</sub>=${fmt((aIn>0)?(aOut/aIn):0,3)}
+      <span data-tex="\beta">β</span> = ${fmt(beta,4)} <span data-tex="\mathrm{m}^{-2}">m⁻²</span> ·
+      <span data-tex="\alpha=\beta a_{\mathrm{in}}">α = βa<sub>in</sub></span> = ${fmt(alpha,4)} <span data-tex="\mathrm{m}^{-1}">m⁻¹</span> ·
+      <span data-tex="a_{\mathrm{out}}/a_{\mathrm{in}}">a<sub>out</sub>/a<sub>in</sub></span> = ${fmt((aIn>0)?(aOut/aIn):0,3)}
     </div>
-    <div class="muted" style="margin-top:6px">a(x)=a<sub>in</sub>/(1+βa<sub>in</sub>(x−x<sub>0</sub>))</div>
+    <div class="math-equation" style="margin-top:12px">
+      <span data-tex="\displaystyle a(x)=\frac{a_{\mathrm{in}}}{1+\beta a_{\mathrm{in}}(x-x_0)}">a(x) = a<sub>in</sub> / (1 + βa<sub>in</sub>(x − x<sub>0</sub>))</span>
+    </div>
   `;
   vegMetricsEl.innerHTML = msg;
+  window.renderMath?.(vegMetricsEl);
 }
 
 function refreshFromUI(){
   state.T = parseFloat(elT.value);
   state.h = parseFloat(elH.value);
-  state.a = parseFloat(elA.value);
-  state.g = parseFloat(elG.value);
+  // The control shows full wave height in cm; the model uses amplitude in m.
+  state.a = parseFloat(elWaveHeight.value) / 200;
   state.viewWidth = parseFloat(elViewWidth.value);
   if (elXZoom) state.zoomS = parseFloat(elXZoom.value);
   if (elXPan) state.panX = parseFloat(elXPan.value);
   state.speed = parseFloat(elSpeed.value);
 
-  state.attenOn = elAttenOn ? !!elAttenOn.checked : false;
-
   for (const { input, restore } of sliderValues) {
     if (document.activeElement !== input) restore();
   }
-  document.getElementById("hHint").textContent = `${Number((100*state.h).toFixed(1))} cm · range 5–30 cm`;
-  document.getElementById("aHint").textContent = `Wave height ${Number((200*state.a).toFixed(2))} cm`;
+  document.getElementById("hHint").textContent = `${Number((100*state.h).toFixed(1))} cm · range 5 cm–5 m`;
 
   updateDerived();
   updateOverlay();
@@ -1970,8 +1960,7 @@ function refreshFromUI(){
 
 }
 
-[elT, elH, elA, elG, elViewWidth, elXZoom, elXPan, elSpeed].forEach(el => el.addEventListener("input", refreshFromUI));
-if (elAttenOn) elAttenOn.addEventListener("change", refreshFromUI);
+[elT, elH, elWaveHeight, elViewWidth, elXZoom, elXPan, elSpeed].forEach(el => el.addEventListener("input", refreshFromUI));
 
 // Vegetation events
 if (elVegPreset){
