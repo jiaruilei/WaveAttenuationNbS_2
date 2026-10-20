@@ -101,7 +101,7 @@
     position:absolute;
     right:10px;
     top:18px;
-    bottom:64px;
+    bottom:108px;
     width:24px;
     display:flex;
     align-items:center;
@@ -117,7 +117,7 @@
   }
   .xpan{
     position:absolute;
-    left:48px;
+    left:100px;
     right:48px;
     bottom:10px;
     height:28px;
@@ -129,7 +129,8 @@
   #xPan{ width:100%; }
   .xctl-label{
     position:absolute;
-    font-size:11px;
+    font-size:16px;
+    font-weight:600;
     color:#5d6b7d;
     background:rgba(255,255,255,.82);
     border:1px solid rgba(203,214,228,.96);
@@ -209,37 +210,6 @@
     </div>
 
     <div class="group">
-      <h3>Display</h3>
-      <label for="field">Water-column field
-        <select id="field">
-          <option value="none">None</option>
-          <option value="phi">Velocity potential ϕ</option>
-          <option value="u">Horizontal velocity u</option>
-          <option value="w">Vertical velocity w</option>
-          <option value="pdyn">Dynamic pressure p' (scaled by ρ)</option>
-        </select>
-      </label>
-
-      <div class="row">
-        <label style="margin:0">
-          <input type="checkbox" id="arrows" checked style="width:auto" />
-          <span>Velocity arrows</span>
-        </label>
-        <label style="margin:0">
-          <input type="checkbox" id="tracers" checked style="width:auto" />
-          <span>Tracers</span>
-        </label>
-      </div>
-
-      <div class="row">
-        <button id="resetTracers">Reset tracers</button>
-        <button id="resetTime">Reset time</button>
-      </div>
-
-    </div>
-
-    
-    <div class="group">
       <h3>Vegetation attenuation</h3>
 
       <label style="margin:0">
@@ -286,7 +256,7 @@
         </div>
         <div>
           <label for="vegCD">Drag coefficient</label>
-          <input type="number" id="vegCD" min="0" step="0.05" value="1.00" />
+          <input type="number" id="vegCD" min="0" step="0.05" value="1.50" />
         </div>
       </div>
 
@@ -511,9 +481,9 @@ const state = {
   zoomS: 0.0, // [-1,1], middle=0 => original view
   panX: 0.0,  // [0,1]
 // display options
-  showArrows: true,
-  showTracers: true,
-  field: "pdyn",
+  showArrows: false,
+  showTracers: false,
+  field: "none",
 
   // tracers: mean positions + trail
   tracers: [],
@@ -528,6 +498,7 @@ const state = {
 };
 
 const view = { W: 0, H: 0 };
+const PLOT_BOTTOM_MARGIN = 88;
 const world = {
   x0: 0,
   x1: 1,
@@ -571,7 +542,7 @@ function resize(){
   DPR = Math.max(1, window.devicePixelRatio || 1);
 
   const rect = canvas.parentElement.getBoundingClientRect();
-  view.W = Math.max(760, rect.width | 0);
+  view.W = Math.max(1, rect.width | 0);
   view.H = Math.max(520, rect.height | 0);
 
   canvas.width  = (view.W * DPR) | 0;
@@ -586,12 +557,12 @@ resize();
 /* ===== World ↔ screen mapping ===== */
 function toScreen(x, z){
   const px = (x - world.x0) / (world.x1 - world.x0) * view.W;
-  const py = (world.z1 - z) / (world.z1 - world.z0) * view.H;
+  const py = (world.z1 - z) / (world.z1 - world.z0) * (view.H - PLOT_BOTTOM_MARGIN);
   return {x:px, y:py};
 }
 function toWorld(px, py){
   const x = world.x0 + (px / view.W) * (world.x1 - world.x0);
-  const z = world.z1 - (py / view.H) * (world.z1 - world.z0);
+  const z = world.z1 - (py / (view.H - PLOT_BOTTOM_MARGIN)) * (world.z1 - world.z0);
   return {x,z};
 }
 function inWater(z){ return z <= 0 && z >= -state.h; }
@@ -863,6 +834,72 @@ function fieldScale(kind){
 }
 
 /* ===== Drawing helpers ===== */
+function drawCanvasLabel(text, x, y, centered = false, size = 18){
+  ctx.save();
+  ctx.font = `600 ${size}px system-ui, sans-serif`;
+  ctx.textBaseline = "top";
+  const width = ctx.measureText(text).width + 14;
+  const height = size + 12;
+  const left = clamp(centered ? x - width/2 : x, 6, Math.max(6, view.W-width-6));
+  const top = clamp(y, 6, Math.max(6, view.H-height-6));
+  ctx.fillStyle = "rgba(255,255,255,0.92)";
+  ctx.fillRect(left, top, width, height);
+  ctx.fillStyle = "#24364f";
+  ctx.fillText(text, left+7, top+5);
+  ctx.restore();
+}
+
+function drawWoodenDowels(p, x0, x1, top, bottom){
+  const diameter = Math.max(0, p.D);
+  if (!(diameter > 0 && p.n > 0)) return;
+  // A representative side-view row with pitch derived from the areal density.
+  const spacing = 1 / Math.sqrt(p.n);
+  const total = Math.max(1, Math.floor((x1-x0) / spacing));
+  const firstX = (x0+x1 - (total-1)*spacing) / 2;
+  const first = Math.max(0, Math.ceil((world.x0-diameter/2-firstX)/spacing));
+  const last = Math.min(total-1, Math.floor((world.x1+diameter/2-firstX)/spacing));
+  const stride = Math.max(1, Math.ceil((last-first+1)/600));
+  const width = diameter / (world.x1-world.x0) * view.W;
+  const height = bottom-top;
+
+  for (let i=Math.ceil(first/stride)*stride; i<=last; i+=stride){
+    const center = toScreen(firstX+i*spacing, 0).x;
+    const left = center-width/2;
+    const grain = ctx.createLinearGradient(left, 0, left+width, 0);
+    grain.addColorStop(0, "#79502d");
+    grain.addColorStop(0.22, "#c99555");
+    grain.addColorStop(0.55, "#e4bf81");
+    grain.addColorStop(0.84, "#b27a40");
+    grain.addColorStop(1, "#80532d");
+    ctx.fillStyle = grain;
+    ctx.fillRect(left, top, width, height);
+
+    // Fine longitudinal grain, clipped to the true world-scaled diameter.
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(left, top, width, height);
+    ctx.clip();
+    ctx.strokeStyle = "rgba(102,62,28,0.42)";
+    ctx.lineWidth = Math.min(0.7, width*0.12);
+    for (let line=0; line<2; line++){
+      ctx.beginPath();
+      for (let j=0; j<=10; j++){
+        const x = left + width*(0.3+0.4*line+0.08*Math.sin(j*1.3+i*2.1+line));
+        const y = top + height*j/10;
+        if (j===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    const capRadius = Math.min(2.5, width*0.25);
+    ctx.fillStyle = "#edca91";
+    ctx.beginPath();
+    ctx.ellipse(center, top+capRadius, width/2, capRadius, 0, 0, 2*Math.PI);
+    ctx.fill();
+  }
+}
+
 function drawArrow(px, py, vx, vy){
   const L = Math.hypot(vx,vy);
   if (L < 1e-9) return;
@@ -883,12 +920,14 @@ function drawAxesAndGrid(){
   ctx.strokeStyle = "rgba(37,99,235,0.10)";
   ctx.lineWidth = 1;
 
-  const gx = Math.round(view.W/12);
+  const gx = Math.max(1, Math.round(view.W/12));
   const gy = Math.round(view.H/10);
-  for (let x=0; x<=view.W; x+=gx){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,view.H); ctx.stroke(); }
-  for (let y=0; y<=view.H; y+=gy){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(view.W,y); ctx.stroke(); }
+  for (let x=0; x<=view.W; x+=gx){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,view.H-PLOT_BOTTOM_MARGIN); ctx.stroke(); }
+  for (let y=0; y<=view.H-PLOT_BOTTOM_MARGIN; y+=gy){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(view.W,y); ctx.stroke(); }
   ctx.restore();
+}
 
+function drawXAxisLabels(){
   // x-axis ticks at bottom of plot area (z=z0)
   ctx.save();
   ctx.strokeStyle = "rgba(71,85,105,0.45)";
@@ -896,12 +935,12 @@ function drawAxesAndGrid(){
   ctx.lineWidth = 1;
 
   const y0 = toScreen(world.x0, world.z0).y;
-  const tickCount = 5;
+  const tickCount = Math.max(2, Math.min(5, Math.floor(view.W/130)));
   for (let i=0;i<=tickCount;i++){
     const xw = world.x0 + (i/tickCount)*(world.x1-world.x0);
     const p = toScreen(xw, world.z0);
-    ctx.beginPath(); ctx.moveTo(p.x, y0); ctx.lineTo(p.x, y0-8); ctx.stroke();
-    ctx.fillText(`${fmt(xw, (world.x1-world.x0) < 10 ? 2 : 0)} m`, p.x+2, y0-10);
+    ctx.beginPath(); ctx.moveTo(p.x, y0); ctx.lineTo(p.x, y0+8); ctx.stroke();
+    drawCanvasLabel(`${fmt(xw, (world.x1-world.x0) < 10 ? 2 : 0)} m`, p.x, y0+10, true, 16);
   }
   ctx.restore();
 }
@@ -914,8 +953,7 @@ function drawBathymetry(){
   ctx.strokeStyle = "rgba(51,65,85,0.72)";
   ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(pL.x, pL.y); ctx.lineTo(pR.x, pR.y); ctx.stroke();
-  ctx.fillStyle = "rgba(51,65,85,0.78)";
-  ctx.fillText(`      seabed z = −h = −${fmt(state.h,2)} m`, pL.x+8, pL.y-10);
+  drawCanvasLabel(`Water depth: ${Number((100*state.h).toFixed(1))} cm`, pL.x+10, pL.y-38);
   ctx.restore();
 }
 
@@ -950,8 +988,10 @@ function drawVegetation(){
     const bottom = Math.max(pBL.y, pTR.y);
 
     // background fill
-    ctx.fillStyle = col.fill;
-    ctx.fillRect(left, top, right-left, bottom-top);
+    if (p.type !== "tank"){
+      ctx.fillStyle = col.fill;
+      ctx.fillRect(left, top, right-left, bottom-top);
+    }
 
     // stems / roughness elements (visual hint only)
     const densityHint = Math.sqrt(Math.max(0, p.n || 0)); // (#/m^2)^0.5
@@ -959,7 +999,9 @@ function drawVegetation(){
 
     // For seagrass: draw repeated textured blades (scaled to vegetation height s).
     // For other types: keep the original line-stem visualization.
-    if (p.type === "seagrass" && seagrassAllReady){
+    if (p.type === "tank"){
+      drawWoodenDowels(p, x0, x1, top, bottom);
+    } else if (p.type === "seagrass" && seagrassAllReady){
       // Base (user) blade height in screen pixels equals the patch height (zB -> zT)
       const H = Math.abs(toScreen(x0c, zB).y - toScreen(x0c, zT).y);
 
@@ -1169,17 +1211,18 @@ function drawVegetation(){
     }
 
     // top boundary
-    ctx.strokeStyle = "rgba(71,85,105,0.30)";
-    ctx.setLineDash([4,4]);
-    const pL = toScreen(x0c, zT);
-    const pR = toScreen(x1c, zT);
-    ctx.beginPath(); ctx.moveTo(pL.x,pL.y); ctx.lineTo(pR.x,pR.y); ctx.stroke();
-    ctx.setLineDash([]);
+    if (p.type !== "tank"){
+      ctx.strokeStyle = "rgba(71,85,105,0.30)";
+      ctx.setLineDash([4,4]);
+      const pL = toScreen(x0c, zT);
+      const pR = toScreen(x1c, zT);
+      ctx.beginPath(); ctx.moveTo(pL.x,pL.y); ctx.lineTo(pR.x,pR.y); ctx.stroke();
+      ctx.setLineDash([]);
+    }
 
     // label
-    ctx.fillStyle = "rgba(36,54,79,0.88)";
-    const label = (p.type==="seagrass") ? "seagrass" : (p.type==="mangroves") ? "mangroves" : (p.type==="coral") ? "coral" : "vegetation";
-    ctx.fillText(`${label}`, left+6, top-6);
+    const label = (p.type==="tank") ? `Wooden dowels · Ø ${Number((1000*p.D).toFixed(1))} mm` : vegLabel(p.type);
+    drawCanvasLabel(label, left+6, top-40);
   }
 
   ctx.restore();
@@ -1228,8 +1271,7 @@ function drawMeanSurface(){
   ctx.setLineDash([6,6]);
   ctx.beginPath(); ctx.moveTo(pL.x, pL.y); ctx.lineTo(pR.x, pR.y); ctx.stroke();
   ctx.setLineDash([]);
-  ctx.fillStyle = "rgba(51,65,85,0.72)";
-  ctx.fillText("mean surface z = 0", pL.x+8, pL.y-8);
+  drawCanvasLabel("Still water level", pL.x+10, pL.y-42);
   ctx.restore();
 }
 
@@ -1543,11 +1585,6 @@ const elXZoom = document.getElementById("xZoom");
 const elXPan = document.getElementById("xPan");
 const elXViewHint = document.getElementById("xViewHint");
 const elSpeed = document.getElementById("speed");
-const elField = document.getElementById("field");
-const elArrows = document.getElementById("arrows");
-const elTracers = document.getElementById("tracers");
-const btnResetTracers = document.getElementById("resetTracers");
-const btnResetTime = document.getElementById("resetTime");
 const statusEl = document.getElementById("status");
 
 // Vegetation controls
@@ -1568,7 +1605,7 @@ const vegMetricsEl = document.getElementById("vegMetrics");
 
 // Simple presets (editable; values vary widely in reality)
 const vegPresets = {
-  tank:      { L: 1, s: 0.20, n: 1953, D: 0.006, CD: 1.00 },
+  tank:      { L: 1, s: 0.20, n: 1953, D: 0.006, CD: 1.50 },
   seagrass:  { L: 40, s: 1.0, n: 400, D: 0.010, CD: 1.00 },
   mangroves: { L: 60, s: 2.5, n:  20, D: 0.080, CD: 1.20 },
   coral:     { L: 30, s: 1.0, n:  80, D: 0.050, CD: 1.00 },
@@ -1815,9 +1852,6 @@ function refreshFromUI(){
   if (elXZoom) state.zoomS = parseFloat(elXZoom.value);
   if (elXPan) state.panX = parseFloat(elXPan.value);
   state.speed = parseFloat(elSpeed.value);
-  state.field = elField.value;
-  state.showArrows = !!elArrows.checked;
-  state.showTracers = !!elTracers.checked;
 
   state.attenOn = elAttenOn ? !!elAttenOn.checked : false;
 
@@ -1830,23 +1864,10 @@ function refreshFromUI(){
   updateMetricsCard();
   updateVegMetricsCard();
 
-  // keep tracers consistent with new wavelength/depth if none exist
-  if (state.tracers.length === 0) makeDefaultTracers();
 }
 
-[elT, elH, elA, elG, elViewN, elXZoom, elXPan, elSpeed, elField].forEach(el => el.addEventListener("input", refreshFromUI));
-[elArrows, elTracers].forEach(el => el.addEventListener("change", refreshFromUI));
+[elT, elH, elA, elG, elViewN, elXZoom, elXPan, elSpeed].forEach(el => el.addEventListener("input", refreshFromUI));
 if (elAttenOn) elAttenOn.addEventListener("change", refreshFromUI);
-
-btnResetTracers.addEventListener("click", ()=>{
-  makeDefaultTracers();
-  statusEl.textContent = "Tracers reset";
-});
-btnResetTime.addEventListener("click", ()=>{
-  state.t = 0;
-  for (const tr of state.tracers) tr.trail = [];
-  statusEl.textContent = "Time reset";
-});
 
 // Vegetation events
 if (elVegPreset){
@@ -1889,7 +1910,7 @@ if (btnClearVeg) btnClearVeg.addEventListener("click", ()=>{
   clearAllVeg();
 });
 
-/* ===== Interaction: click to add tracer ===== */
+/* ===== Vegetation shortcuts ===== */
 canvas.addEventListener("mousedown", (ev)=>{
   const r = canvas.getBoundingClientRect();
   const p = toWorld(ev.clientX - r.left, ev.clientY - r.top);
@@ -1912,12 +1933,6 @@ canvas.addEventListener("mousedown", (ev)=>{
     return;
   }
 
-  // Default: add tracer
-  if (!inWater(p.z)) { statusEl.textContent = "Click inside the water column (z between −h and 0)"; return; }
-
-  const tr = { X0: clamp(p.x, world.x0, world.x1), Z0: clamp(p.z, -state.h, 0), trail:[] };
-  state.tracers.push(tr);
-  statusEl.textContent = `Tracer added at (X0,Z0)=(${fmt(tr.X0,2)} m, ${fmt(tr.Z0,2)} m)`;
 });
 
 /* ===== Shortcuts ===== */
@@ -1927,9 +1942,6 @@ window.addEventListener("keydown", (e)=>{
     state.paused = !state.paused;
     statusEl.textContent = state.paused ? "Paused" : "Running";
     e.preventDefault();
-  } else if (k.toLowerCase() === "r"){
-    makeDefaultTracers();
-    statusEl.textContent = "Tracers reset";
   } else if (k === "0"){
     state.t = 0;
     for (const tr of state.tracers) tr.trail = [];
@@ -1956,7 +1968,6 @@ function frame(now){
 
   if (!state.paused){
     state.t += dtReal * state.speed;
-    updateTracers(state.t);
   }
 
   // draw
@@ -1965,11 +1976,12 @@ function frame(now){
 
   drawColorField(state.t);
   drawAxesAndGrid();
-  drawBathymetry();
   drawVegetation();
-  drawMeanSurface();
   drawAmplitudeEnvelope();
   drawFreeSurface(state.t);
+  drawMeanSurface();
+  drawBathymetry();
+  drawXAxisLabels();
   drawVelocityArrows(state.t);
   drawTracers();
 
