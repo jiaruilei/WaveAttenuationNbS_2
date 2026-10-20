@@ -539,6 +539,8 @@ const state = {
 
   // Physical view width stays fixed when wave period or depth changes.
   viewWidth: 2.0,
+  // Keep headroom for the tank dowels when comparing with and without plants.
+  viewPlantHeight: 0.20,
 
   
   // x-view controls
@@ -842,11 +844,13 @@ function updateDerived(){
   }
 
   world.z0 = -state.h;
-  // show a bit of air above mean surface, but don't let it dwarf the plot
-  const visiblePatches = state.vegPatches.filter(p =>
-    Math.max(p.x0, p.x1) > world.x0 && Math.min(p.x0, p.x1) < world.x1 && p.x0 !== p.x1);
-  const plantTop = visiblePatches.reduce((top, p) =>
-    Math.max(top, 1.2 * p.s - state.h), 0);
+  // Fit taller vegetation when needed, then retain that framing on removal.
+  // Use every patch so panning or zooming does not change the vertical scale.
+  state.viewPlantHeight = state.vegPatches.reduce((height, p) =>
+    Number.isFinite(p.s) && Number.isFinite(p.x0) && Number.isFinite(p.x1) && p.x0 !== p.x1
+      ? Math.max(height, p.s) : height,
+    state.viewPlantHeight);
+  const plantTop = Math.max(0, 1.2 * state.viewPlantHeight - state.h);
   const zTop = Math.max(2*state.a, 0.12*state.h, plantTop + 0.05*state.h);
   world.z1 = zTop;
   const layout = state.tracerLayout;
